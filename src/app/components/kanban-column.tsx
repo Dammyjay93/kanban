@@ -11,6 +11,16 @@ interface Task {
   description: string;
   status: 'todo' | 'inProgress' | 'done';
   priority: 'Low' | 'Medium' | 'High';
+  dueDate?: string;
+  assignees: {
+    id: string;
+    avatar: string;
+  }[];
+  subtasks?: {
+    id: string;
+    title: string;
+    completed: boolean;
+  }[];
 }
 
 interface KanbanColumnProps {
@@ -115,6 +125,9 @@ export default function KanbanColumn({ title, tasks, status, onDrop, onReorder, 
                 description={task.description}
                 status={task.status}
                 priority={task.priority}
+                dueDate={task.dueDate}
+                assignees={task.assignees}
+                subtasks={task.subtasks}
                 onClick={() => onTaskClick(task.id)}
                 onDelete={onDeleteTask}
               />

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { DotsThree, Trash, Flag } from '@phosphor-icons/react';
+import { DotsThree, Trash, Flag, CheckSquare, Clock } from '@phosphor-icons/react';
 
 interface KanbanCardProps {
   title: string;
@@ -11,11 +11,33 @@ interface KanbanCardProps {
   index: number;
   status: 'todo' | 'inProgress' | 'done';
   priority: 'Low' | 'Medium' | 'High';
+  dueDate?: string;
+  assignees: {
+    id: string;
+    avatar: string;
+  }[];
+  subtasks?: {
+    id: string;
+    title: string;
+    completed: boolean;
+  }[];
   onClick: () => void;
   onDelete: (id: string) => void;
 }
 
-export default function KanbanCard({ title, description, id, index, status, priority, onClick, onDelete }: KanbanCardProps) {
+export default function KanbanCard({ 
+  title, 
+  description, 
+  id, 
+  index, 
+  status, 
+  priority,
+  dueDate,
+  assignees,
+  subtasks = [],
+  onClick, 
+  onDelete 
+}: KanbanCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +77,17 @@ export default function KanbanCard({ title, description, id, index, status, prio
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getRelativeTime = (date: string) => {
+    const now = new Date();
+    const dueDate = new Date(date);
+    const diffTime = Math.abs(dueDate.getTime() - now.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${diffDays}d`;
+  };
+
+  const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
+  const totalSubtasks = subtasks.length;
 
   return (
     <motion.div
@@ -111,37 +144,29 @@ export default function KanbanCard({ title, description, id, index, status, prio
       
       <div className="flex items-center justify-between">
         <div className="flex -space-x-2">
-          <img
-            src="https://ui-avatars.com/api/?name=John+Doe&background=random"
-            alt="Assignee"
-            className="w-6 h-6 rounded-full border-2 border-white"
-          />
-          <img
-            src="https://ui-avatars.com/api/?name=Jane+Smith&background=random"
-            alt="Assignee"
-            className="w-6 h-6 rounded-full border-2 border-white"
-          />
+          {assignees.map((assignee, index) => (
+            <img
+              key={assignee.id}
+              src={assignee.avatar}
+              alt={`Assignee ${index + 1}`}
+              className="w-6 h-6 rounded-full border-2 border-white"
+            />
+          ))}
         </div>
 
         <div className="flex items-center gap-3 text-sm text-gray-500">
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
-            </svg>
-            <span>12</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-            <span>1</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span>0/3</span>
-          </div>
+          {dueDate && typeof dueDate === 'string' && (
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{getRelativeTime(dueDate)}</span>
+            </div>
+          )}
+          {totalSubtasks > 0 && (
+            <div className="flex items-center gap-1">
+              <CheckSquare className="w-4 h-4" />
+              <span>{completedSubtasks}/{totalSubtasks}</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

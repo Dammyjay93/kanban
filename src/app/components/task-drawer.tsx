@@ -9,10 +9,6 @@ import {
   TextAlignLeft, 
   User, 
   CaretLeft,
-  PaperclipHorizontal,
-  DownloadSimple,
-  FilePdf,
-  File,
   CheckSquare,
   ListChecks,
   ChatCircle,
@@ -21,6 +17,20 @@ import {
   Plus,
   Trash
 } from '@phosphor-icons/react';
+
+type Activity = {
+  id: string;
+  type: 'status_change' | 'priority_change' | 'assignee_change' | 'comment_added';
+  message: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  details?: {
+    oldStatus?: Task['status'];
+    newStatus?: Task['status'];
+    comment?: string;
+  };
+};
 
 interface Task {
   id: string;
@@ -39,6 +49,7 @@ interface Task {
     title: string;
     completed: boolean;
   }[];
+  activities?: Activity[];
 }
 
 type TabType = 'subtasks' | 'comments' | 'activities';
@@ -48,6 +59,38 @@ interface TaskDrawerProps {
   onClose: () => void;
   onUpdate: (updatedTask: Task) => void;
 }
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'todo':
+      return 'bg-blue-50 text-blue-700';
+    case 'inProgress':
+      return 'bg-yellow-50 text-yellow-700';
+    case 'done':
+      return 'bg-green-50 text-green-700';
+    default:
+      return 'bg-gray-50 text-gray-700';
+  }
+};
+
+const getStatusDisplay = (status: string) => {
+  switch (status) {
+    case 'todo':
+      return 'To Do';
+    case 'inProgress':
+      return 'In Progress';
+    case 'done':
+      return 'Done';
+    default:
+      return status;
+  }
+};
+
+const StatusTag = ({ status }: { status: Task['status'] }) => (
+  <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
+    {getStatusDisplay(status)}
+  </span>
+);
 
 export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('subtasks');
@@ -90,32 +133,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     );
     onUpdate({ ...task, subtasks: updatedSubtasks });
     setEditingId(null);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'bg-blue-50 text-blue-700';
-      case 'inProgress':
-        return 'bg-yellow-50 text-yellow-700';
-      case 'done':
-        return 'bg-green-50 text-green-700';
-      default:
-        return 'bg-gray-50 text-gray-700';
-    }
-  };
-
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'To Do';
-      case 'inProgress':
-        return 'In Progress';
-      case 'done':
-        return 'Done';
-      default:
-        return status;
-    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -229,18 +246,75 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               <ChatCircle className="w-5 h-5 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Comments</span>
             </div>
-            <div className="flex gap-3">
+            <div className="space-y-4">
+              {task.activities
+                ?.filter(activity => activity.type === 'comment_added')
+                .map(activity => (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
+                      {activity.userId}
+                    </div>
+                    <div>
+                      <p className="text-sm">
+                        <span className="font-medium text-gray-900">{activity.userName}</span>{' '}
+                        <span className="text-gray-700">{activity.details?.comment}</span>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+            <form 
+              className="flex gap-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const commentText = (e.target as HTMLFormElement).comment.value.trim();
+                if (!commentText) return;
+
+                const newActivity: Activity = {
+                  id: Date.now().toString(),
+                  type: 'comment_added',
+                  message: 'Added a comment',
+                  timestamp: new Date().toISOString(),
+                  userId: 'CT', // This should come from your auth system
+                  userName: 'Calum Tyler', // This should come from your auth system
+                  details: {
+                    comment: commentText
+                  }
+                };
+
+                onUpdate({
+                  ...task,
+                  activities: [...(task.activities || []), newActivity]
+                });
+
+                // Reset the form
+                (e.target as HTMLFormElement).reset();
+              }}
+            >
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
                 CT
               </div>
               <div className="flex-1">
                 <textarea
+                  name="comment"
                   placeholder="Write a comment..."
-                  className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   rows={3}
+                  required
                 />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Comment
+                  </button>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
         );
       case 'activities':
@@ -251,17 +325,35 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               <span className="text-sm font-medium text-gray-700">Activities</span>
             </div>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
-                  CT
-                </div>
-                <div>
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">Calum Tyler</span> changed status to In Progress
-                  </p>
-                  <p className="text-xs text-gray-500">2 hours ago</p>
-                </div>
-              </div>
+              {task.activities?.length === 0 ? (
+                <p className="text-sm text-gray-500">No activities yet</p>
+              ) : (
+                task.activities?.map(activity => (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
+                      {activity.userId}
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-900">
+                        <span className="font-medium">{activity.userName}</span>{' '}
+                        {activity.type === 'status_change' && activity.details ? (
+                          <>
+                            Changed status from{' '}
+                            <StatusTag status={activity.details.oldStatus!} />{' '}
+                            to{' '}
+                            <StatusTag status={activity.details.newStatus!} />
+                          </>
+                        ) : (
+                          activity.message
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         );
@@ -337,7 +429,27 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 <div className="relative inline-block">
                   <select
                     value={task.status}
-                    onChange={(e) => handleChange('status', e.target.value)}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as Task['status'];
+                      const newActivity: Activity = {
+                        id: Date.now().toString(),
+                        type: 'status_change',
+                        message: 'Changed status',
+                        timestamp: new Date().toISOString(),
+                        userId: 'CT', // This should come from your auth system
+                        userName: 'Calum Tyler', // This should come from your auth system
+                        details: {
+                          oldStatus: task.status,
+                          newStatus: newStatus
+                        }
+                      };
+                      handleChange('status', newStatus);
+                      onUpdate({
+                        ...task,
+                        status: newStatus,
+                        activities: [...(task.activities || []), newActivity]
+                      });
+                    }}
                     className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-gray-900 [&>_option]:pl-2.5`}
                   >
                     <option value="todo">To Do</option>
@@ -421,48 +533,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add a more detailed description..."
               />
-            </div>
-
-            {/* Attachments Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PaperclipHorizontal weight="regular" className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Attachments (2)</span>
-                </div>
-                <button className="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
-                  <DownloadSimple weight="bold" className="w-4 h-4" />
-                  Download All
-                </button>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                    <FilePdf weight="bold" className="w-5 h-5 text-red-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">Design brief.pdf</p>
-                    <p className="text-xs text-gray-500">1,5 MB</p>
-                  </div>
-                  <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                    <DownloadSimple weight="bold" className="w-4 h-4" />
-                    Download
-                  </button>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                    <File weight="bold" className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">Crafboard logo.ai</p>
-                    <p className="text-xs text-gray-500">2,5 MB</p>
-                  </div>
-                  <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                    <DownloadSimple weight="bold" className="w-4 h-4" />
-                    Download
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Tabs */}
