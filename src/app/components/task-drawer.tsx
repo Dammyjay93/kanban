@@ -15,7 +15,8 @@ import {
   Activity,
   CaretDown,
   Plus,
-  Trash
+  Trash,
+  Share
 } from '@phosphor-icons/react';
 
 type Activity = {
@@ -145,6 +146,24 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return 'bg-red-50 text-red-700';
       default:
         return 'bg-gray-50 text-gray-700';
+    }
+  };
+
+  const handleShare = async () => {
+    const taskUrl = `${window.location.origin}/task/${task.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: task.title,
+          text: task.description,
+          url: taskUrl
+        });
+      } else {
+        await navigator.clipboard.writeText(taskUrl);
+        // You might want to add a toast notification here
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
     }
   };
 
@@ -380,19 +399,28 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         className="fixed right-4 top-4 bottom-4 h-auto w-[456px] rounded-lg bg-white shadow-lg z-50 flex flex-col"
       >
         {/* Header */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50"
+            >
               <X weight="bold" className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-medium text-gray-900">Task Details</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50"
+              >
+                <Share weight="regular" className="w-5 h-5" />
+              </button>
+              <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                <DotsThree weight="bold" className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="text-gray-400 hover:text-gray-600">
-              <DotsThree weight="bold" className="w-6 h-6" />
-            </button>
-          </div>
-        </header>
+          <h2 className="text-lg font-medium text-gray-900">Task Details</h2>
+        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto font-sans">

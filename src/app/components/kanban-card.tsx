@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { DotsThree, Trash, Flag, CheckSquare, Clock } from '@phosphor-icons/react';
+import { DotsThree, Trash, Flag, CheckSquare, Clock, Share } from '@phosphor-icons/react';
 
 interface KanbanCardProps {
   title: string;
@@ -62,6 +62,26 @@ export default function KanbanCard({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(id);
+    setIsMenuOpen(false);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const taskUrl = `${window.location.origin}/task/${id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title,
+          text: description,
+          url: taskUrl
+        });
+      } else {
+        await navigator.clipboard.writeText(taskUrl);
+        // You might want to add a toast notification here
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
     setIsMenuOpen(false);
   };
 
@@ -127,6 +147,13 @@ export default function KanbanCard({
           
           {isMenuOpen && (
             <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <button
+                onClick={handleShare}
+                className="w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Share className="w-4 h-4" />
+                Share
+              </button>
               <button
                 onClick={handleDelete}
                 className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
