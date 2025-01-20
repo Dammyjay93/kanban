@@ -9,6 +9,13 @@ interface Task {
   title: string;
   description: string;
   status: 'todo' | 'inProgress' | 'done';
+  createdAt: string;
+  priority: 'Low' | 'Medium' | 'High';
+  dueDate?: string;
+  assignees: {
+    id: string;
+    avatar: string;
+  }[];
   subtasks?: {
     id: string;
     title: string;
@@ -22,6 +29,14 @@ const initialTasks: Task[] = [
     title: 'Create login page',
     description: 'Design and implement user authentication',
     status: 'todo',
+    createdAt: 'September 20, 2024 10:35 AM',
+    priority: 'Low',
+    dueDate: '2022-10-12',
+    assignees: [
+      { id: '1', avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff' },
+      { id: '2', avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=22c55e&color=fff' },
+      { id: '3', avatar: 'https://ui-avatars.com/api/?name=Bob+Johnson&background=ef4444&color=fff' }
+    ],
     subtasks: [
       { id: '1-1', title: 'Design login form UI', completed: true },
       { id: '1-2', title: 'Implement form validation', completed: false },
@@ -33,6 +48,11 @@ const initialTasks: Task[] = [
     title: 'Setup database',
     description: 'Configure PostgreSQL for the project',
     status: 'todo',
+    createdAt: 'September 19, 2024 2:15 PM',
+    priority: 'Medium',
+    assignees: [
+      { id: '2', avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=22c55e&color=fff' }
+    ],
     subtasks: [
       { id: '2-1', title: 'Install PostgreSQL', completed: true },
       { id: '2-2', title: 'Create initial schema', completed: false },
@@ -43,6 +63,13 @@ const initialTasks: Task[] = [
     title: 'Build API endpoints',
     description: 'Create REST API for user management',
     status: 'inProgress',
+    createdAt: 'September 18, 2024 11:20 AM',
+    priority: 'High',
+    dueDate: '2022-10-10',
+    assignees: [
+      { id: '1', avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff' },
+      { id: '3', avatar: 'https://ui-avatars.com/api/?name=Bob+Johnson&background=ef4444&color=fff' }
+    ],
     subtasks: [
       { id: '3-1', title: 'Define API routes', completed: true },
       { id: '3-2', title: 'Implement CRUD operations', completed: true },
@@ -55,6 +82,11 @@ const initialTasks: Task[] = [
     title: 'Project setup',
     description: 'Initialize Next.js with TypeScript',
     status: 'done',
+    createdAt: 'September 15, 2024 9:00 AM',
+    priority: 'Low',
+    assignees: [
+      { id: '1', avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff' }
+    ],
     subtasks: [
       { id: '4-1', title: 'Create Next.js project', completed: true },
       { id: '4-2', title: 'Add TypeScript configuration', completed: true },
@@ -66,6 +98,11 @@ const initialTasks: Task[] = [
     title: 'Add Tailwind CSS',
     description: 'Configure styling framework',
     status: 'done',
+    createdAt: 'September 16, 2024 3:45 PM',
+    priority: 'Low',
+    assignees: [
+      { id: '2', avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=22c55e&color=fff' }
+    ],
     subtasks: [
       { id: '5-1', title: 'Install Tailwind CSS', completed: true },
       { id: '5-2', title: 'Configure PostCSS', completed: true },
@@ -139,6 +176,16 @@ export default function KanbanBoard() {
       title: 'New Task',
       description: 'Click to edit description',
       status,
+      createdAt: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      }),
+      priority: 'Low',
+      assignees: [],
       subtasks: [],
     };
     setTasks([...tasks, newTask]);

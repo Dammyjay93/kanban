@@ -6,7 +6,6 @@ import {
   X, 
   DotsThree, 
   Clock, 
-  Tag, 
   TextAlignLeft, 
   User, 
   CaretLeft,
@@ -17,7 +16,10 @@ import {
   CheckSquare,
   ListChecks,
   ChatCircle,
-  Activity
+  Activity,
+  CaretDown,
+  Plus,
+  Trash
 } from '@phosphor-icons/react';
 
 interface Task {
@@ -25,6 +27,13 @@ interface Task {
   title: string;
   description: string;
   status: 'todo' | 'inProgress' | 'done';
+  createdAt: string;
+  priority: 'Low' | 'Medium' | 'High';
+  dueDate?: string;
+  assignees: {
+    id: string;
+    avatar: string;
+  }[];
   subtasks?: {
     id: string;
     title: string;
@@ -44,6 +53,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const [activeTab, setActiveTab] = useState<TabType>('subtasks');
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
 
   useEffect(() => {
     if (task) {
@@ -73,6 +84,53 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     });
   };
 
+  const handleEditSubmit = (subtaskId: string) => {
+    const updatedSubtasks = task.subtasks?.map(st =>
+      st.id === subtaskId ? { ...st, title: editText } : st
+    );
+    onUpdate({ ...task, subtasks: updatedSubtasks });
+    setEditingId(null);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'bg-blue-50 text-blue-700';
+      case 'inProgress':
+        return 'bg-yellow-50 text-yellow-700';
+      case 'done':
+        return 'bg-green-50 text-green-700';
+      default:
+        return 'bg-gray-50 text-gray-700';
+    }
+  };
+
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'To Do';
+      case 'inProgress':
+        return 'In Progress';
+      case 'done':
+        return 'Done';
+      default:
+        return status;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Low':
+        return 'bg-blue-50 text-blue-700';
+      case 'Medium':
+        return 'bg-yellow-50 text-yellow-700';
+      case 'High':
+        return 'bg-red-50 text-red-700';
+      default:
+        return 'bg-gray-50 text-gray-700';
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'subtasks':
@@ -93,22 +151,74 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 <p className="text-sm text-gray-500">No subtasks yet</p>
               ) : (
                 subtasks.map(subtask => (
-                  <div key={subtask.id} className="flex items-center gap-2">
+                  <div key={subtask.id} className="flex items-center gap-2 group">
                     <input
                       type="checkbox"
                       checked={subtask.completed}
                       onChange={() => {
                         const updatedSubtasks = task.subtasks?.map(st =>
                           st.id === subtask.id ? { ...st, completed: !st.completed } : st
-                        );
+                        ).sort((a, b) => {
+                          if (a.completed === b.completed) return 0;
+                          return a.completed ? 1 : -1;
+                        });
                         onUpdate({ ...task, subtasks: updatedSubtasks });
                       }}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">{subtask.title}</span>
+                    {editingId === subtask.id ? (
+                      <input
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onBlur={() => handleEditSubmit(subtask.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleEditSubmit(subtask.id);
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
+                        className="flex-1 text-sm text-gray-700 bg-transparent border-0 p-0 focus:outline-none focus:ring-0"
+                        autoFocus
+                      />
+                    ) : (
+                      <span 
+                        onClick={() => {
+                          setEditingId(subtask.id);
+                          setEditText(subtask.title);
+                        }}
+                        className={`text-sm text-gray-700 flex-1 cursor-text hover:text-gray-900 ${subtask.completed ? 'line-through text-gray-400' : ''}`}
+                      >
+                        {subtask.title}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => {
+                        const updatedSubtasks = task.subtasks?.filter(st => st.id !== subtask.id);
+                        onUpdate({ ...task, subtasks: updatedSubtasks });
+                      }}
+                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
                   </div>
                 ))
               )}
+              <button
+                onClick={() => {
+                  const newSubtask = {
+                    id: Date.now().toString(),
+                    title: 'New subtask',
+                    completed: false
+                  };
+                  onUpdate({
+                    ...task,
+                    subtasks: [...(task.subtasks || []), newSubtask]
+                  });
+                }}
+                className="w-full py-2 px-3 flex text-sm items-center justify-center gap-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-150"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add new</span>
+              </button>
             </div>
           </div>
         );
@@ -175,7 +285,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="fixed right-4 top-4 bottom-4 h-auto w-[480px] rounded-lg bg-white shadow-lg z-50 flex flex-col"
+        className="fixed right-4 top-4 bottom-4 h-auto w-[456px] rounded-lg bg-white shadow-lg z-50 flex flex-col"
       >
         {/* Header */}
         <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
@@ -195,65 +305,109 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         {/* Content */}
         <div className="flex-1 overflow-y-auto font-sans">
           <div className="p-6 space-y-6">
-
-          {/* Title Section */}
+            {/* Title Section */}
             <div>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleSubmit}
                 className="w-full text-2xl font-semibold text-gray-900 border-0 p-0 focus:outline-none focus:ring-0"
                 placeholder="Task title"
               />
             </div>
 
-            {/* Status Section */}
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Status</span>
-              <select
-                value={task.status}
-                onChange={(e) => handleChange('status', e.target.value as 'todo' | 'inProgress' | 'done')}
-                className="ml-auto px-3 py-1.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="todo">To Do</option>
-                <option value="inProgress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
-            </div>
-
-            {/* Tags Section */}
-            <div className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Tags</span>
-              <div className="ml-auto flex items-center gap-2">
-                <span className="px-3 py-1 text-sm bg-purple-50 text-purple-700 rounded-full">Dashboard</span>
-                <span className="px-3 py-1 text-sm bg-yellow-50 text-yellow-700 rounded-full">Medium</span>
-              </div>
-            </div>
-
-            {/* Assignees Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Assignees</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600 border-2 border-white">
-                    CT
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm font-medium text-green-600 border-2 border-white">
-                    DT
-                  </div>
+            {/* Metadata Section */}
+            <div className="space-y-4">
+              {/* Created Time */}
+              <div className="flex items-center">
+                <div className="flex items-center gap-2 w-48">
+                  <Clock className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Created time</span>
                 </div>
-                <button className="ml-2 text-sm text-blue-600 font-medium hover:text-blue-700">
-                  Invite
-                </button>
+                <span className="text-sm text-gray-500">{task.createdAt}</span>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center">
+                <div className="flex items-center gap-2 w-48">
+                  <CheckSquare className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Status</span>
+                </div>
+                <div className="relative inline-block">
+                  <select
+                    value={task.status}
+                    onChange={(e) => handleChange('status', e.target.value)}
+                    className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-gray-900 [&>_option]:pl-2.5`}
+                  >
+                    <option value="todo">To Do</option>
+                    <option value="inProgress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                  <CaretDown 
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none ${getStatusColor(task.status).split(' ')[1]}`}
+                    weight="bold"
+                  />
+                </div>
+              </div>
+
+              {/* Priority */}
+              <div className="flex items-center">
+                <div className="flex items-center gap-2 w-48">
+                  <ListChecks className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Priority</span>
+                </div>
+                <div className="relative inline-block">
+                  <select
+                    value={task.priority}
+                    onChange={(e) => handleChange('priority', e.target.value)}
+                    className="w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none bg-gray-100 text-gray-800 [&>_option]:text-gray-900 [&>_option]:pl-2.5"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                  <CaretDown 
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-gray-800"
+                    weight="bold"
+                  />
+                </div>
+              </div>
+
+              {/* Due Date */}
+              <div className="flex items-center">
+                <div className="flex items-center gap-2 w-48">
+                  <Clock className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Due Date</span>
+                </div>
+                <input
+                  type="date"
+                  value={task.dueDate || ''}
+                  onChange={(e) => handleChange('dueDate', e.target.value)}
+                  className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none"
+                />
+              </div>
+
+              {/* Assignees */}
+              <div className="flex items-center">
+                <div className="flex items-center gap-2 w-48">
+                  <User className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Assignees</span>
+                </div>
+                <div className="flex -space-x-2">
+                  {task.assignees.map((assignee, index) => (
+                    <img
+                      key={assignee.id}
+                      src={assignee.avatar}
+                      alt={`Assignee ${index + 1}`}
+                      className="w-8 h-8 rounded-full border-2 border-white"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Description Section */}
+            {/* Description */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <TextAlignLeft className="w-5 h-5 text-gray-400" />
@@ -262,6 +416,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                onBlur={handleDescriptionSubmit}
                 rows={4}
                 className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add a more detailed description..."
@@ -315,7 +470,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               <div className="flex gap-8">
                 <button
                   onClick={() => setActiveTab('subtasks')}
-                  className={`pb-4 px-2 text-base font-medium relative ${
+                  className={`pb-4 px-2 text-sm font-medium relative ${
                     activeTab === 'subtasks'
                       ? 'text-blue-600'
                       : 'text-gray-500 hover:text-gray-700'
@@ -328,21 +483,20 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`pb-4 px-2 text-base font-medium relative ${
+                  className={`pb-4 px-2 text-sm font-medium relative ${
                     activeTab === 'comments'
                       ? 'text-blue-600'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   Comments
-                  <span className="ml-2 text-sm bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">3</span>
                   {activeTab === 'comments' && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab('activities')}
-                  className={`pb-4 px-2 text-base font-medium relative ${
+                  className={`pb-4 px-2 text-sm font-medium relative ${
                     activeTab === 'activities'
                       ? 'text-blue-600'
                       : 'text-gray-500 hover:text-gray-700'

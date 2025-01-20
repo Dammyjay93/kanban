@@ -10,6 +10,7 @@ interface Task {
   title: string;
   description: string;
   status: 'todo' | 'inProgress' | 'done';
+  priority: 'Low' | 'Medium' | 'High';
 }
 
 interface KanbanColumnProps {
@@ -113,6 +114,7 @@ export default function KanbanColumn({ title, tasks, status, onDrop, onReorder, 
                 title={task.title}
                 description={task.description}
                 status={task.status}
+                priority={task.priority}
                 onClick={() => onTaskClick(task.id)}
                 onDelete={onDeleteTask}
               />

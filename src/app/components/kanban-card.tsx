@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { DotsThree, Trash } from '@phosphor-icons/react';
+import { DotsThree, Trash, Flag } from '@phosphor-icons/react';
 
 interface KanbanCardProps {
   title: string;
@@ -10,11 +10,12 @@ interface KanbanCardProps {
   id: string;
   index: number;
   status: 'todo' | 'inProgress' | 'done';
+  priority: 'Low' | 'Medium' | 'High';
   onClick: () => void;
   onDelete: (id: string) => void;
 }
 
-export default function KanbanCard({ title, description, id, index, status, onClick, onDelete }: KanbanCardProps) {
+export default function KanbanCard({ title, description, id, index, status, priority, onClick, onDelete }: KanbanCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -32,26 +33,26 @@ export default function KanbanCard({ title, description, id, index, status, onCl
   }, []);
 
   const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking menu
+    e.stopPropagation();
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking delete
+    e.stopPropagation();
     onDelete(id);
     setIsMenuOpen(false);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'bg-indigo-500';
-      case 'inProgress':
-        return 'bg-yellow-500';
-      case 'done':
-        return 'bg-green-500';
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Low':
+        return 'bg-blue-50 text-blue-700';
+      case 'Medium':
+        return 'bg-yellow-50 text-yellow-700';
+      case 'High':
+        return 'bg-red-50 text-red-700';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -79,8 +80,10 @@ export default function KanbanCard({ title, description, id, index, status, onCl
       }}
     >
       <div className="flex items-center gap-2 mb-2">
-        <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
-        <span className="text-sm font-medium text-gray-500 capitalize">{status === 'inProgress' ? 'In Progress' : status}</span>
+        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(priority)}`}>
+          <Flag className="w-3 h-3" weight="regular" />
+          {priority}
+        </span>
         <div className="relative ml-auto" ref={menuRef}>
           <button 
             onClick={handleMenuClick}
