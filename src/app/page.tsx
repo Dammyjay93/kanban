@@ -72,12 +72,11 @@ export default function Home() {
   };
 
   return (
-    <div className="app-container min-h-screen flex flex-col overscroll-none">
-      <div className="fixed inset-0 bg-[#F6F6F7] [background-image:radial-gradient(#CDD0DB_1px,#F6F6F7_1px)] [background-size:20px_20px]" />
-      <header className="header-container fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
-        <div className="header-content max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="header-sections space-y-4">
-            <div className="title-section flex items-center gap-2">
+    <div className="min-h-screen bg-[#F6F6F7] [background-image:radial-gradient(#CDD0DB_1px,#F6F6F7_1px)] [background-size:20px_20px] flex flex-col">
+      <header className="flex-shrink-0 fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               {isEditingTitle ? (
                 <input
                   ref={inputRef}
@@ -86,14 +85,14 @@ export default function Home() {
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={handleTitleSubmit}
                   onKeyDown={handleKeyDown}
-                  className="title-input text-2xl font-bold text-gray-900 bg-transparent border-b-1 border-blue-500 outline-none px-1"
+                  className="text-2xl font-bold text-gray-900 bg-transparent border-b border-blue-500 outline-none px-1"
                 />
               ) : (
-                <h1 className="board-title text-2xl font-bold text-gray-900">{title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
               )}
               <button 
                 onClick={() => setIsEditingTitle(true)}
-                className="edit-title-button text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600"
               >
                 <MdModeEdit className="w-5 h-5" />
               </button>
@@ -105,10 +104,9 @@ export default function Home() {
           </div>
         </div>
       </header>
-      <main className="w-full">
-        <div className="main-content max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[156px]">
-          {renderContent()}
-        </div>
+
+      <main className="flex-1 max-w-5xl mx-auto w-full pt-[156px] pb-6">
+        {renderContent()}
       </main>
     </div>
   );

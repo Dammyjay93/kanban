@@ -1,6 +1,6 @@
 'use client';
 
-import { TbLayoutKanban, TbLayoutList, TbTimeline, TbCalendarBolt } from "react-icons/tb";
+import { TbLayoutKanban, TbList, TbTimeline, TbCalendar } from "react-icons/tb";
 import { useState } from 'react';
 
 type ViewType = 'board' | 'list' | 'timeline' | 'calendar';
@@ -13,14 +13,14 @@ interface ViewSwitcherProps {
 interface ViewOption {
   id: ViewType;
   label: string;
-  icon: any; // Updated to accommodate different icon types
+  icon: any;
 }
 
 const viewOptions: ViewOption[] = [
   { id: 'board', label: 'Board', icon: TbLayoutKanban },
-  { id: 'list', label: 'List', icon: TbLayoutList },
+  { id: 'list', label: 'List', icon: TbList },
   { id: 'timeline', label: 'Timeline', icon: TbTimeline },
-  { id: 'calendar', label: 'Calendar', icon: TbCalendarBolt },
+  { id: 'calendar', label: 'Calendar', icon: TbCalendar },
 ];
 
 export default function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {

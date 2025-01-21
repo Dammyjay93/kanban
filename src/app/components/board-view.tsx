@@ -31,38 +31,27 @@ const initialTasks: Task[] = [
     title: 'Create login page',
     description: 'Design and implement user authentication',
     status: 'todo',
-    createdAt: 'September 20, 2024 10:35 AM',
+    createdAt: new Date().toLocaleString(),
     priority: 'Low',
-    dueDate: '2022-10-12',
     assignees: [
       { id: '1', avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff' },
-      { id: '2', avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=22c55e&color=fff' },
-      { id: '3', avatar: 'https://ui-avatars.com/api/?name=Bob+Johnson&background=ef4444&color=fff' }
     ],
     subtasks: [
       { id: '1-1', title: 'Design login form UI', completed: true },
       { id: '1-2', title: 'Implement form validation', completed: false },
-      { id: '1-3', title: 'Add social login options', completed: false },
     ]
-  },
-  // ... other initial tasks can be moved here
+  }
 ];
 
 export default function BoardView() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Load tasks from localStorage on initial render
   useEffect(() => {
     const savedTasks = localStorage.getItem(STORAGE_KEY);
     if (savedTasks) {
       try {
-        const parsed = JSON.parse(savedTasks);
-        const validatedTasks = parsed.map((task: Task) => ({
-          ...task,
-          subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
-        }));
-        setTasks(validatedTasks);
+        setTasks(JSON.parse(savedTasks));
       } catch (error) {
         console.error('Error loading tasks:', error);
         setTasks(initialTasks);
@@ -72,7 +61,6 @@ export default function BoardView() {
     }
   }, []);
 
-  // Save tasks to localStorage whenever they change
   useEffect(() => {
     if (tasks.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
@@ -108,14 +96,7 @@ export default function BoardView() {
       title: 'New Task',
       description: 'Click to edit description',
       status,
-      createdAt: new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      }),
+      createdAt: new Date().toLocaleString(),
       priority: 'Low',
       assignees: [],
       subtasks: [],
@@ -131,14 +112,10 @@ export default function BoardView() {
   };
 
   const handleTaskUpdate = (updatedTask: Task) => {
-    const validatedTask = {
-      ...updatedTask,
-      subtasks: Array.isArray(updatedTask.subtasks) ? updatedTask.subtasks : []
-    };
     setTasks(tasks.map(task => 
-      task.id === validatedTask.id ? validatedTask : task
+      task.id === updatedTask.id ? updatedTask : task
     ));
-    setSelectedTask(validatedTask);
+    setSelectedTask(updatedTask);
   };
 
   const deleteTask = (taskId: string) => {
@@ -146,39 +123,37 @@ export default function BoardView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7]">
-      <div className="flex gap-8 p-6 h-full">
-        <KanbanColumn
-          title="To Do"
-          status="todo"
-          tasks={tasks.filter(task => task.status === 'todo')}
-          onDrop={(taskId) => moveTask(taskId, 'todo')}
-          onReorder={reorderTask}
-          onAddCard={addCard}
-          onTaskClick={handleTaskClick}
-          onDeleteTask={deleteTask}
-        />
-        <KanbanColumn
-          title="In Progress"
-          status="inProgress"
-          tasks={tasks.filter(task => task.status === 'inProgress')}
-          onDrop={(taskId) => moveTask(taskId, 'inProgress')}
-          onReorder={reorderTask}
-          onAddCard={addCard}
-          onTaskClick={handleTaskClick}
-          onDeleteTask={deleteTask}
-        />
-        <KanbanColumn
-          title="Done"
-          status="done"
-          tasks={tasks.filter(task => task.status === 'done')}
-          onDrop={(taskId) => moveTask(taskId, 'done')}
-          onReorder={reorderTask}
-          onAddCard={addCard}
-          onTaskClick={handleTaskClick}
-          onDeleteTask={deleteTask}
-        />
-      </div>
+    <div className="flex gap-6 p-6 h-full">
+      <KanbanColumn
+        title="To Do"
+        status="todo"
+        tasks={tasks.filter(task => task.status === 'todo')}
+        onDrop={(taskId) => moveTask(taskId, 'todo')}
+        onReorder={reorderTask}
+        onAddCard={addCard}
+        onTaskClick={handleTaskClick}
+        onDeleteTask={deleteTask}
+      />
+      <KanbanColumn
+        title="In Progress"
+        status="inProgress"
+        tasks={tasks.filter(task => task.status === 'inProgress')}
+        onDrop={(taskId) => moveTask(taskId, 'inProgress')}
+        onReorder={reorderTask}
+        onAddCard={addCard}
+        onTaskClick={handleTaskClick}
+        onDeleteTask={deleteTask}
+      />
+      <KanbanColumn
+        title="Done"
+        status="done"
+        tasks={tasks.filter(task => task.status === 'done')}
+        onDrop={(taskId) => moveTask(taskId, 'done')}
+        onReorder={reorderTask}
+        onAddCard={addCard}
+        onTaskClick={handleTaskClick}
+        onDeleteTask={deleteTask}
+      />
 
       <TaskDrawer
         task={selectedTask}

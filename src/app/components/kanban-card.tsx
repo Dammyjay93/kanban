@@ -1,17 +1,17 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
-import { DotsThree, Trash, Flag, CheckSquare, Clock, Share } from '@phosphor-icons/react';
+import { TbDots, TbFlag, TbMessage2, TbCalendarClock, TbCircleDashed, TbSubtask } from "react-icons/tb";
+import { useState } from 'react';
 
 interface KanbanCardProps {
-  title: string;
-  description: string;
   id: string;
   index: number;
+  title: string;
+  description: string;
   status: 'todo' | 'inProgress' | 'done';
   priority: 'Low' | 'Medium' | 'High';
   dueDate?: string;
+  comments?: number;
   assignees: {
     id: string;
     avatar: string;
@@ -25,150 +25,140 @@ interface KanbanCardProps {
   onDelete: (id: string) => void;
 }
 
-export default function KanbanCard({ 
-  title, 
-  description, 
-  id, 
-  index, 
-  status, 
+const getPriorityStyle = (priority: string) => {
+  switch (priority) {
+    case 'Low':
+      return 'bg-blue-50 text-blue-700';
+    case 'Medium':
+      return 'bg-yellow-50 text-yellow-700';
+    case 'High':
+      return 'bg-red-50 text-red-700';
+    default:
+      return 'bg-gray-50 text-gray-700';
+  }
+};
+
+const getRelativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = date.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'Overdue';
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays <= 7) return `In ${diffDays} days`;
+  return new Date(dateString).toLocaleDateString();
+};
+
+export default function KanbanCard({
+  id,
+  index,
+  title,
+  description,
   priority,
   dueDate,
+  comments = 0,
   assignees,
   subtasks = [],
-  onClick, 
-  onDelete 
+  onClick,
+  onDelete
 }: KanbanCardProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete(id);
-    setIsMenuOpen(false);
-  };
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const taskUrl = `${window.location.origin}/task/${id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title,
-          text: description,
-          url: taskUrl
-        });
-      } else {
-        await navigator.clipboard.writeText(taskUrl);
-        // You might want to add a toast notification here
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
-    setIsMenuOpen(false);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'Low':
-        return 'bg-blue-50 text-blue-700';
-      case 'Medium':
-        return 'bg-yellow-50 text-yellow-700';
-      case 'High':
-        return 'bg-red-50 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRelativeTime = (date: string) => {
-    const now = new Date();
-    const dueDate = new Date(date);
-    const diffTime = Math.abs(dueDate.getTime() - now.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return `${diffDays}d`;
-  };
-
   const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
-  const totalSubtasks = subtasks.length;
+  const progress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : 0;
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const element = event.currentTarget;
+    const rect = element.getBoundingClientRect();
+    setMousePosition({
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100,
+    });
+  };
 
   return (
-    <motion.div
-      layout
-      layoutId={id}
-      transition={{ duration: 0.15 }}
-      className="bg-white p-4 rounded-lg shadow-sm cursor-pointer hover:scale-[1.01] transition-transform"
-      draggable="true"
+    <div
+      draggable
       onClick={onClick}
-      onDragStart={(e: any) => {
-        if (e.dataTransfer) {
-          e.dataTransfer.setData('taskId', id);
-          e.dataTransfer.setData('sourceIndex', index.toString());
-          if (e.currentTarget instanceof HTMLElement) {
-            e.currentTarget.style.opacity = '0.1';
-          }
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => {
+        setMousePosition({ x: 50, y: 50 });
+        setShowMenu(false);
+      }}
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+        e.dataTransfer.setData('taskId', id);
+        e.dataTransfer.setData('sourceIndex', index.toString());
+        if (e.currentTarget instanceof HTMLElement) {
+          e.currentTarget.style.opacity = '0.5';
         }
       }}
-      onDragEnd={(e: any) => {
+      onDragEnd={(e: React.DragEvent<HTMLDivElement>) => {
         if (e.currentTarget instanceof HTMLElement) {
           e.currentTarget.style.opacity = '1';
         }
       }}
+      style={{
+        '--mouse-x': `${mousePosition.x}%`,
+        '--mouse-y': `${mousePosition.y}%`,
+      } as React.CSSProperties}
+      className="relative bg-white p-3 rounded-[12px] cursor-pointer transition-all duration-200
+        border border-[#070708]/[0.06]
+        before:absolute before:inset-0 before:rounded-[12px] before:-z-10
+        before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_white_0%,_transparent_50%)]
+        before:transition-[background-position] before:duration-300
+        after:absolute after:inset-0 after:rounded-[12px] after:-z-20
+        after:shadow-[0_17px_5px_rgba(7,7,8,0.00),0_11px_4px_rgba(7,7,8,0.01),0_6px_4px_rgba(7,7,8,0.02),0_3px_3px_rgba(7,7,8,0.04),0_1px_1px_rgba(7,7,8,0.05)]
+        [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.08)]
+        hover:bg-[#F9F9FA]
+        active:translate-y-[0.5px]"
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(priority)}`}>
-          <Flag className="w-3 h-3" weight="regular" />
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityStyle(priority)}`}>
+          <TbFlag className="w-3 h-3" />
           {priority}
         </span>
-        <div className="relative ml-auto" ref={menuRef}>
+        <div className="relative ml-auto">
           <button 
-            onClick={handleMenuClick}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="text-gray-400 hover:text-gray-600"
           >
-            <DotsThree weight="bold" className="w-5 h-5" />
+            <TbDots className="w-4 h-4" />
           </button>
-          
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+          {showMenu && (
+            <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10">
               <button
-                onClick={handleShare}
-                className="w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle edit action
+                  setShowMenu(false);
+                }}
+                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
               >
-                <Share className="w-4 h-4" />
-                Share
+                Edit
               </button>
               <button
-                onClick={handleDelete}
-                className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(id);
+                  setShowMenu(false);
+                }}
+                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50"
               >
-                <Trash className="w-4 h-4" />
                 Delete
               </button>
             </div>
           )}
         </div>
       </div>
-      
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{description}</p>
-      
+
+      <h3 className="text-sm font-medium text-gray-900 mb-1">{title}</h3>
+      <p className="text-sm text-gray-500 mb-3 line-clamp-2">{description}</p>
+
       <div className="flex items-center justify-between">
         <div className="flex -space-x-2">
           {assignees.map((assignee, index) => (
@@ -181,21 +171,27 @@ export default function KanbanCard({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-gray-500">
-          {dueDate && typeof dueDate === 'string' && (
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          {dueDate && (
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+              <TbCalendarClock className="w-3.5 h-3.5" />
               <span>{getRelativeTime(dueDate)}</span>
             </div>
           )}
-          {totalSubtasks > 0 && (
-            <div className="flex items-center gap-1">
-              <CheckSquare className="w-4 h-4" />
-              <span>{completedSubtasks}/{totalSubtasks}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <TbSubtask className="w-3.5 h-3.5" />
+            <span>{completedSubtasks}/{subtasks.length}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <TbCircleDashed className="w-3.5 h-3.5" />
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <TbMessage2 className="w-3.5 h-3.5" />
+            <span>{comments}</span>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 } 
