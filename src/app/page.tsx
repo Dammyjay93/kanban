@@ -108,7 +108,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F7] [background-image:radial-gradient(#CDD0DB_1px,#F6F6F7_1px)] [background-size:20px_20px] flex flex-col">
+    <div className="min-h-screen bg-[#F6F6F7] [background-image:radial-gradient(#CDD0DB_1px,#F6F6F7_1px)] [background-size:20px_20px] [background-attachment:fixed] flex flex-col">
       <header className="flex-shrink-0 fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="space-y-4">
