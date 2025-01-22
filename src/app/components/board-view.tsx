@@ -125,7 +125,7 @@ export default function BoardView() {
   };
 
   return (
-    <div className="flex gap-6 p-6 h-full">
+    <div className="flex gap-6 h-full">
       <KanbanColumn
         title="To Do"
         status="todo"

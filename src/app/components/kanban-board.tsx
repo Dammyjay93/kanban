@@ -4,7 +4,7 @@ import BoardView from './board-view';
 
 export default function KanbanBoard() {
   return (
-    <div className="h-full">
+    <div className="h-full overflow-visible">
       <BoardView />
     </div>
   );

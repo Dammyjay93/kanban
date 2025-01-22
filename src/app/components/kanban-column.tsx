@@ -104,7 +104,7 @@ export default function KanbanColumn({
 
   return (
     <div
-      className={`w-80 h-full bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col transition-all duration-200 ${
+      className={`w-80 bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col h-fit ${
         isDragOver ? `border ${styles.border}` : 'border border-[#EBEBEB]'
       }`}
       onDragOver={handleDragOver}
@@ -143,7 +143,7 @@ export default function KanbanColumn({
         </div>
       </div>
 
-      <div className={`flex-1 px-1 pt-2 pb-1 overflow-hidden`}>
+      <div className={`px-1 pt-2 pb-1 overflow-hidden`}>
         <motion.div 
           {...kanbanAnimations.layout}
           className="space-y-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2"

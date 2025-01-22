@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MdModeEdit } from "react-icons/md";
 import { TbX, TbCheck } from "react-icons/tb";
+import { AnimatePresence, motion } from 'framer-motion';
 import KanbanBoard from './components/kanban-board';
 import ViewSwitcher from './components/view-switcher';
 import HeaderActions from './components/header-actions';
@@ -77,14 +78,31 @@ export default function Home() {
   const renderContent = () => {
     switch (activeView) {
       case 'board':
-        return <KanbanBoard />;
+        return (
+          <motion.div
+            key="board"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <KanbanBoard />
+          </motion.div>
+        );
       case 'list':
       case 'timeline':
       case 'calendar':
         return (
-          <div className="flex items-center justify-center h-[600px] bg-white rounded-lg shadow-sm">
+          <motion.div
+            key={activeView}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center justify-center min-h-[600px]"
+          >
             <p className="text-gray-500">{activeView.charAt(0).toUpperCase() + activeView.slice(1)} view coming soon...</p>
-          </div>
+          </motion.div>
         );
     }
   };
@@ -160,7 +178,13 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full pt-[156px] pb-6">
-        {renderContent()}
+        <div className={`p-6 min-h-[calc(100vh-156px-1.5rem)] ${
+          activeView !== 'board' ? 'bg-white rounded-lg shadow-sm' : ''
+        }`}>
+          <AnimatePresence mode="wait">
+            {renderContent()}
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   );
