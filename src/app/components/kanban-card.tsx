@@ -103,7 +103,7 @@ export default function KanbanCard({
         '--mouse-x': `${mousePosition.x}%`,
         '--mouse-y': `${mousePosition.y}%`,
       } as React.CSSProperties}
-      className="relative bg-white p-3 rounded-[12px] cursor-pointer transition-all duration-200
+      className="relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
         border border-[#070708]/[0.06]
         before:absolute before:inset-0 before:rounded-[12px] before:-z-10
         before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_white_0%,_transparent_50%)]
@@ -112,7 +112,8 @@ export default function KanbanCard({
         after:shadow-[0_17px_5px_rgba(7,7,8,0.00),0_11px_4px_rgba(7,7,8,0.01),0_6px_4px_rgba(7,7,8,0.02),0_3px_3px_rgba(7,7,8,0.04),0_1px_1px_rgba(7,7,8,0.05)]
         [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.08)]
         hover:bg-[#F9F9FA]
-        active:translate-y-[0.5px]"
+        active:translate-y-[0.5px]
+        active:cursor-grabbing"
     >
       <div className="flex items-center gap-2 mb-2">
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityStyle(priority)}`}>

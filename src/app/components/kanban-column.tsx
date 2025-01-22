@@ -2,7 +2,9 @@
 
 import { motion } from 'framer-motion';
 import { DotsThree, Plus } from '@phosphor-icons/react';
+import { useState } from 'react';
 import KanbanCard from './kanban-card';
+import { kanbanAnimations } from '../constants/animations';
 
 interface Task {
   id: string;
@@ -26,7 +28,7 @@ interface KanbanColumnProps {
   title: string;
   tasks: Task[];
   status: 'todo' | 'inProgress' | 'done';
-  onDrop: (taskId: string) => void;
+  onDrop: (taskId: string, targetIndex: number) => void;
   onReorder: (taskId: string, sourceIndex: number, targetIndex: number) => void;
   onAddCard: (status: 'todo' | 'inProgress' | 'done') => void;
   onTaskClick: (taskId: string) => void;
@@ -38,22 +40,26 @@ const getColumnStyle = (status: string) => {
     case 'todo':
       return {
         indicator: 'bg-blue-500',
-        count: 'bg-blue-50 text-blue-700'
+        count: 'bg-blue-50 text-blue-700',
+        border: 'border-blue-500'
       };
     case 'inProgress':
       return {
         indicator: 'bg-yellow-500',
-        count: 'bg-yellow-50 text-yellow-700'
+        count: 'bg-yellow-50 text-yellow-700',
+        border: 'border-yellow-500'
       };
     case 'done':
       return {
         indicator: 'bg-green-500',
-        count: 'bg-green-50 text-green-700'
+        count: 'bg-green-50 text-green-700',
+        border: 'border-green-500'
       };
     default:
       return {
         indicator: 'bg-gray-500',
-        count: 'bg-gray-50 text-gray-700'
+        count: 'bg-gray-50 text-gray-700',
+        border: 'border-gray-500'
       };
   }
 };
@@ -69,23 +75,57 @@ export default function KanbanColumn({
   onDeleteTask 
 }: KanbanColumnProps) {
   const styles = getColumnStyle(status);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [dropPosition, setDropPosition] = useState<number | null>(null);
+  const [draggedTask, setDraggedTask] = useState<{ id: string, sourceColumn: string } | null>(null);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+
+    // Calculate drop position
+    const column = e.currentTarget;
+    const cards = Array.from(column.getElementsByClassName('kanban-card'));
+    const mouseY = e.clientY;
+
+    let position = tasks.length;
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const rect = card.getBoundingClientRect();
+      const cardMiddle = rect.top + rect.height / 2;
+
+      if (mouseY < cardMiddle) {
+        position = i;
+        break;
+      }
+    }
+    setDropPosition(position);
+  };
 
   return (
     <div
-      className="w-80 h-full bg-[#F1F1F1] border border-1.5 border-[#EBEBEB] rounded-lg shadow-sm flex flex-col"
-      onDragOver={(e) => {
-        e.preventDefault();
+      className={`w-80 h-full bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col transition-all duration-200 ${
+        isDragOver ? `border ${styles.border}` : 'border border-[#EBEBEB]'
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={() => {
+        setIsDragOver(false);
+        setDropPosition(null);
       }}
       onDrop={(e) => {
         e.preventDefault();
+        setIsDragOver(false);
+        setDropPosition(null);
+        setDraggedTask(null);
         const taskId = e.dataTransfer.getData('taskId');
         const sourceIndex = parseInt(e.dataTransfer.getData('sourceIndex'));
+        const targetIndex = dropPosition ?? tasks.length;
         
         if (taskId) {
           if (tasks.find(t => t.id === taskId)) {
-            onReorder(taskId, sourceIndex, tasks.length);
+            onReorder(taskId, sourceIndex, targetIndex);
           } else {
-            onDrop(taskId);
+            onDrop(taskId, targetIndex);
           }
         }
       }}
@@ -103,24 +143,64 @@ export default function KanbanColumn({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-1 pt-2 pb-1">
-        <motion.div layout className="space-y-1">
-          {tasks.map((task, index) => (
-            <KanbanCard
-              key={task.id}
-              id={task.id}
-              index={index}
-              title={task.title}
-              description={task.description}
-              status={task.status}
-              priority={task.priority}
-              dueDate={task.dueDate}
-              assignees={task.assignees}
-              subtasks={task.subtasks}
-              onClick={() => onTaskClick(task.id)}
-              onDelete={onDeleteTask}
-            />
-          ))}
+      <div className={`flex-1 px-1 pt-2 pb-1 overflow-hidden`}>
+        <motion.div 
+          {...kanbanAnimations.layout}
+          className="space-y-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2"
+          style={{
+            willChange: isDragOver ? 'transform' : 'auto'
+          }}
+        >
+          {tasks.map((task, index) => {
+            const isDragging = draggedTask?.id === task.id && draggedTask.sourceColumn === status;
+            
+            return (
+              <motion.div 
+                key={task.id} 
+                className="relative"
+                {...kanbanAnimations.card}
+                animate={isDragging ? 'dragging' : 'default'}
+              >
+                {dropPosition === index && (
+                  <div 
+                    className={`absolute -top-1 left-0 right-0 h-0.5 ${styles.indicator} rounded-full`} 
+                  />
+                )}
+                <div 
+                  className={`kanban-card w-full transition-all duration-200 ${
+                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !rounded-[12px] !border-gray-500 relative after:absolute after:inset-0 after:bg-[#DEDEDE] after:rounded-[12px] after:pointer-events-none' : ''
+                  }`}
+                  style={{
+                    willChange: isDragOver ? 'transform' : 'auto'
+                  }}
+                  draggable
+                  onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+                    e.dataTransfer.setData('taskId', task.id);
+                    e.dataTransfer.setData('sourceIndex', index.toString());
+                    setDraggedTask({ id: task.id, sourceColumn: status });
+                  }}
+                  onDragEnd={() => setDraggedTask(null)}
+                >
+                  <KanbanCard
+                    id={task.id}
+                    index={index}
+                    title={task.title}
+                    description={task.description}
+                    status={task.status}
+                    priority={task.priority}
+                    dueDate={task.dueDate}
+                    assignees={task.assignees}
+                    subtasks={task.subtasks}
+                    onClick={() => onTaskClick(task.id)}
+                    onDelete={onDeleteTask}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+          {dropPosition === tasks.length && (
+            <div className={`h-0.5 ${styles.indicator} rounded-full`} />
+          )}
           <button
             onClick={() => onAddCard(status)}
             className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-white rounded-[12px] transition-colors duration-150"

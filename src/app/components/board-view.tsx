@@ -3,25 +3,7 @@
 import { useState, useEffect } from 'react';
 import KanbanColumn from './kanban-column';
 import TaskDrawer from './task-drawer';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'inProgress' | 'done';
-  createdAt: string;
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  assignees: {
-    id: string;
-    avatar: string;
-  }[];
-  subtasks?: {
-    id: string;
-    title: string;
-    completed: boolean;
-  }[];
-}
+import { Task } from '../types';
 
 const STORAGE_KEY = 'kanban-tasks';
 
@@ -39,7 +21,9 @@ const initialTasks: Task[] = [
     subtasks: [
       { id: '1-1', title: 'Design login form UI', completed: true },
       { id: '1-2', title: 'Implement form validation', completed: false },
-    ]
+    ],
+    activities: [],
+    comments: []
   }
 ];
 
@@ -67,10 +51,26 @@ export default function BoardView() {
     }
   }, [tasks]);
 
-  const moveTask = (taskId: string, newStatus: 'todo' | 'inProgress' | 'done') => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+  const moveTask = (taskId: string, newStatus: 'todo' | 'inProgress' | 'done', targetIndex?: number) => {
+    setTasks(prevTasks => {
+      const newTasks = [...prevTasks];
+      const taskIndex = newTasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) return prevTasks;
+
+      const task = { ...newTasks[taskIndex], status: newStatus };
+      newTasks.splice(taskIndex, 1);
+
+      // If targetIndex is provided, insert at that position
+      if (targetIndex !== undefined) {
+        const statusTasks = newTasks.filter(t => t.status === newStatus);
+        const nonStatusTasks = newTasks.filter(t => t.status !== newStatus);
+        statusTasks.splice(targetIndex, 0, task);
+        return [...nonStatusTasks, ...statusTasks];
+      }
+
+      // Otherwise, add to the end
+      return [...newTasks, task];
+    });
   };
 
   const reorderTask = (taskId: string, sourceIndex: number, targetIndex: number) => {
@@ -100,6 +100,8 @@ export default function BoardView() {
       priority: 'Low',
       assignees: [],
       subtasks: [],
+      activities: [],
+      comments: []
     };
     setTasks([...tasks, newTask]);
   };
@@ -128,7 +130,7 @@ export default function BoardView() {
         title="To Do"
         status="todo"
         tasks={tasks.filter(task => task.status === 'todo')}
-        onDrop={(taskId) => moveTask(taskId, 'todo')}
+        onDrop={(taskId, targetIndex) => moveTask(taskId, 'todo', targetIndex)}
         onReorder={reorderTask}
         onAddCard={addCard}
         onTaskClick={handleTaskClick}
@@ -138,7 +140,7 @@ export default function BoardView() {
         title="In Progress"
         status="inProgress"
         tasks={tasks.filter(task => task.status === 'inProgress')}
-        onDrop={(taskId) => moveTask(taskId, 'inProgress')}
+        onDrop={(taskId, targetIndex) => moveTask(taskId, 'inProgress', targetIndex)}
         onReorder={reorderTask}
         onAddCard={addCard}
         onTaskClick={handleTaskClick}
@@ -148,7 +150,7 @@ export default function BoardView() {
         title="Done"
         status="done"
         tasks={tasks.filter(task => task.status === 'done')}
-        onDrop={(taskId) => moveTask(taskId, 'done')}
+        onDrop={(taskId, targetIndex) => moveTask(taskId, 'done', targetIndex)}
         onReorder={reorderTask}
         onAddCard={addCard}
         onTaskClick={handleTaskClick}

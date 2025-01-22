@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   X, 
   DotsThree, 
@@ -12,49 +12,16 @@ import {
   CheckSquare,
   ListChecks,
   ChatCircle,
-  Activity,
+  Activity as ActivityIcon,
   CaretDown,
   Plus,
   Trash,
   Share
 } from '@phosphor-icons/react';
-import { TbCalendarClock, TbFlag3, TbProgressCheck, TbShare, TbUser, TbCheckbox, TbMessage2, TbActivity } from 'react-icons/tb';
+import { TbCalendarClock, TbFlag3, TbProgressCheck, TbShare, TbUser, TbCheckbox, TbMessage2, TbActivity, TbX, TbCheck } from 'react-icons/tb';
+import { MdModeEdit } from "react-icons/md";
 import PillSwitcher from './pill-switcher';
-
-type Activity = {
-  id: string;
-  type: 'status_change' | 'priority_change' | 'assignee_change' | 'comment_added';
-  message: string;
-  timestamp: string;
-  userId: string;
-  userName: string;
-  details?: {
-    oldStatus?: Task['status'];
-    newStatus?: Task['status'];
-    comment?: string;
-  };
-};
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'inProgress' | 'done';
-  createdAt: string;
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  assignees: {
-    id: string;
-    avatar: string;
-  }[];
-  subtasks?: {
-    id: string;
-    title: string;
-    completed: boolean;
-  }[];
-  activities?: Activity[];
-  comments?: Comment[];
-}
+import { Task, Activity, Comment } from '../types';
 
 type TabType = 'subtasks' | 'comments' | 'activities';
 
@@ -98,11 +65,14 @@ const StatusTag = ({ status }: { status: Task['status'] }) => (
 
 export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('subtasks');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(task?.title || '');
+  const [originalTitle, setOriginalTitle] = useState(title);
   const [description, setDescription] = useState(task?.description || '');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const tabOptions = [
     { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox },
@@ -113,6 +83,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   useEffect(() => {
     if (task) {
       setTitle(task.title);
+      setOriginalTitle(task.title);
       setDescription(task.description);
       document.body.style.overflow = 'hidden';
     }
@@ -121,32 +92,71 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     };
   }, [task]);
 
-  if (!task) return null;
+  useEffect(() => {
+    if (isEditingTitle && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditingTitle]);
 
   const handleTitleSubmit = () => {
-    onUpdate({ ...task, title });
+    if (!task) return;
+    const updatedTask: Task = {
+      ...task,
+      title
+    };
+    onUpdate(updatedTask);
+    setOriginalTitle(title);
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTitle(originalTitle);
+    setIsEditingTitle(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleTitleSubmit();
+    } else if (e.key === 'Escape') {
+      setTitle(originalTitle);
+      setIsEditingTitle(false);
+    }
   };
 
   const handleDescriptionSubmit = () => {
-    onUpdate({ ...task, description });
+    if (!task) return;
+    const updatedTask: Task = {
+      ...task,
+      description
+    };
+    onUpdate(updatedTask);
   };
 
-  const handleChange = (field: keyof typeof task, value: string | any) => {
-    onUpdate({
+  const handleChange = (field: keyof Task, value: Task[keyof Task]) => {
+    if (!task) return;
+    const updatedTask: Task = {
       ...task,
       [field]: value
-    });
+    };
+    onUpdate(updatedTask);
   };
 
   const handleEditSubmit = (subtaskId: string) => {
+    if (!task) return;
     const updatedSubtasks = task.subtasks?.map(st =>
       st.id === subtaskId ? { ...st, title: editText } : st
     );
-    onUpdate({ ...task, subtasks: updatedSubtasks });
+    const updatedTask: Task = {
+      ...task,
+      subtasks: updatedSubtasks
+    };
+    onUpdate(updatedTask);
     setEditingId(null);
   };
 
   const getPriorityColor = (priority: string) => {
+    if (!task) return 'bg-gray-50 text-gray-700';
     switch (priority) {
       case 'Low':
         return 'bg-blue-50 text-blue-700';
@@ -160,6 +170,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   };
 
   const handleShare = async () => {
+    if (!task) return;
     const taskUrl = `${window.location.origin}/task/${task.id}`;
     try {
       if (navigator.share) {
@@ -178,6 +189,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   };
 
   const handleMouseMove = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!task) return;
     const button = event.currentTarget;
     const rect = button.getBoundingClientRect();
     setMousePosition({
@@ -187,6 +199,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   };
 
   const renderTabContent = () => {
+    if (!task) return null;
     switch (activeTab) {
       case 'subtasks':
         const subtasks = task.subtasks || [];
@@ -218,7 +231,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                           if (a.completed === b.completed) return 0;
                           return a.completed ? 1 : -1;
                         });
-                        onUpdate({ ...task, subtasks: updatedSubtasks });
+                        handleChange('subtasks', updatedSubtasks);
                       }}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -249,7 +262,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                     <button
                       onClick={() => {
                         const updatedSubtasks = task.subtasks?.filter(st => st.id !== subtask.id);
-                        onUpdate({ ...task, subtasks: updatedSubtasks });
+                        handleChange('subtasks', updatedSubtasks);
                       }}
                       className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
@@ -265,10 +278,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                     title: 'New subtask',
                     completed: false
                   };
-                  onUpdate({
-                    ...task,
-                    subtasks: [...(task.subtasks || []), newSubtask]
-                  });
+                  handleChange('subtasks', [...(task.subtasks || []), newSubtask]);
                 }}
                 className="w-full py-2 px-3 flex text-sm items-center justify-center gap-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-150"
               >
@@ -324,10 +334,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   }
                 };
 
-                onUpdate({
-                  ...task,
-                  activities: [...(task.activities || []), newActivity]
-                });
+                handleChange('activities', [...(task.activities || []), newActivity]);
 
                 // Reset the form
                 (e.target as HTMLFormElement).reset();
@@ -360,7 +367,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-gray-400" />
+              <TbActivity className="w-4 h-4 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Activities</span>
             </div>
             <div className="space-y-4">
@@ -398,6 +405,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         );
     }
   };
+
+  if (!task) return null;
 
   return (
     <>
@@ -442,22 +451,57 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         <div className="flex-1 overflow-y-auto font-sans">
           <div className="p-6 pt-4 space-y-6">
             {/* Title Section */}
-            <div>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleTitleSubmit}
-                className="w-full text-xl font-medium text-gray-900 border-0 p-0 focus:outline-none focus:ring-0"
-                placeholder="Task title"
-              />
+            <div className="group cursor-pointer" onClick={() => {
+              setIsEditingTitle(true);
+              setOriginalTitle(title);
+            }}>
+              {isEditingTitle ? (
+                <div className="w-fit max-w-full flex items-center gap-2 border border-[#18181B]/10 rounded-[10px]">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xl font-medium text-gray-900 bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
+                    size={title.length}
+                  />
+                  <div className="flex items-center gap-1 pr-2 shrink-0">
+                    <button 
+                      onClick={handleTitleCancel}
+                      type="button"
+                      className="p-1 rounded-md hover:bg-[#18181B]/[0.06]"
+                    >
+                      <TbX className="w-3.5 h-3.5 text-gray-700" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTitleSubmit();
+                      }}
+                      type="button"
+                      className="p-1 rounded-md hover:bg-[#18181B]/[0.06]"
+                    >
+                      <TbCheck className="w-3.5 h-3.5 text-gray-700" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-fit max-w-full flex items-center gap-2">
+                  <h1 className="text-xl font-medium text-gray-900 break-words">{title}</h1>
+                  <div className="text-gray-400 hover:text-gray-900 group-hover:text-gray-900 hover:bg-[#18181B]/[0.04] group-hover:bg-[#18181B]/[0.04] rounded-lg p-1 -m-1 shrink-0">
+                    <MdModeEdit className="w-4 h-4" />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Metadata Section */}
             <div className="space-y-4">
               {/* Created Time */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2 w-48">
+                <div className="flex items-center gap-2 w-[180px] shrink-0">
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-regular text-gray-900">Created time</span>
                 </div>
@@ -466,7 +510,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
 
               {/* Status */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2 w-48">
+                <div className="flex items-center gap-2 w-[180px] shrink-0">
                   <TbProgressCheck className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-regular text-gray-900">Status</span>
                 </div>
@@ -480,19 +524,15 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                         type: 'status_change',
                         message: 'Changed status',
                         timestamp: new Date().toISOString(),
-                        userId: 'CT', // This should come from your auth system
-                        userName: 'Calum Tyler', // This should come from your auth system
+                        userId: 'CT',
+                        userName: 'Calum Tyler',
                         details: {
                           oldStatus: task.status,
                           newStatus: newStatus
                         }
                       };
                       handleChange('status', newStatus);
-                      onUpdate({
-                        ...task,
-                        status: newStatus,
-                        activities: [...(task.activities || []), newActivity]
-                      });
+                      handleChange('activities', [...(task.activities || []), newActivity]);
                     }}
                     className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-gray-900 [&>_option]:pl-2.5`}
                   >
@@ -509,7 +549,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
 
               {/* Priority */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2 w-48">
+                <div className="flex items-center gap-2 w-[180px] shrink-0">
                   <TbFlag3 className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-regular text-gray-900">Priority</span>
                 </div>
@@ -532,7 +572,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
 
               {/* Due Date */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2 w-48">
+                <div className="flex items-center gap-2 w-[180px] shrink-0">
                   <TbCalendarClock className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-regular text-gray-900">Due Date</span>
                 </div>
@@ -540,25 +580,18 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   type="date"
                   value={task.dueDate || ''}
                   onChange={(e) => handleChange('dueDate', e.target.value)}
-                  className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none"
+                  className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none p-0 [&::-webkit-calendar-picker-indicator]:ml-[-4px]"
                 />
               </div>
 
               {/* Assignees */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2 w-48">
+                <div className="flex items-center gap-2 w-[180px] shrink-0">
                   <TbUser className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-regular text-gray-900">Assignees</span>
                 </div>
-                <div className="flex -space-x-2">
-                  {task.assignees.map((assignee, index) => (
-                    <img
-                      key={assignee.id}
-                      src={assignee.avatar}
-                      alt={`Assignee ${index + 1}`}
-                      className="w-8 h-8 rounded-full border-2 border-white"
-                    />
-                  ))}
+                <div className="flex items-center">
+                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Coming Soon</span>
                 </div>
               </div>
             </div>
