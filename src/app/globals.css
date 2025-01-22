@@ -33,7 +33,7 @@ body {
     from 0deg at 50% 50%,
     transparent,
     transparent 80%,
-    #3b82f6 80%,
+    #3b82f6 65%,
     #8b5cf6,
     #ec4899,
     transparent 95%
@@ -42,7 +42,8 @@ body {
   inset: -4px;
   border-radius: inherit;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.05s ease;
+  transform: rotate(0deg);
 }
 
 .avatar-trail::after {
@@ -56,14 +57,45 @@ body {
 
 .avatar-trail:hover::before {
   opacity: 1;
-  animation: rotate-trail 1s cubic-bezier(0.3, 0.2, 0.6, 1);
+  animation: rotate-trail-forward 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-@keyframes rotate-trail {
+.avatar-trail::before {
+  animation: rotate-trail-reverse 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards paused;
+}
+
+.avatar-trail:not(:hover)::before {
+  animation-play-state: running;
+}
+
+@keyframes rotate-trail-forward {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes rotate-trail-reverse {
+  from {
+    transform: rotate(360deg);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(0deg);
+    opacity: 0;
+  }
+}
+
+.avatar-trail:hover + div {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  transition-delay: 0.4s;
+}
+
+.avatar-trail:not(:hover) + div {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  transition-delay: 0s;
 }
