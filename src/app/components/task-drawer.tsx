@@ -471,7 +471,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                     <button 
                       onClick={handleTitleCancel}
                       type="button"
-                      className="p-1 rounded-md hover:bg-[#18181B]/[0.06]"
+                      className="p-1 rounded-md bg-[#18181B]/[0.06]"
                     >
                       <TbX className="w-3.5 h-3.5 text-gray-700" />
                     </button>
@@ -481,7 +481,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                         handleTitleSubmit();
                       }}
                       type="button"
-                      className="p-1 rounded-md hover:bg-[#18181B]/[0.06]"
+                      className="p-1 rounded-md bg-[#18181B]/[0.06]"
                     >
                       <TbCheck className="w-3.5 h-3.5 text-gray-700" />
                     </button>

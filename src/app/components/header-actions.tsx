@@ -73,12 +73,12 @@ export default function HeaderActions({ onShare, onThemeChange }: HeaderActionsP
           '--mouse-x': `${mousePosition.x}%`,
           '--mouse-y': `${mousePosition.y}%`,
         } as React.CSSProperties}
-        className={`flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-colors relative bg-white outline outline-1 outline-gray-100 shadow-sm hover:text-gray-700 before:absolute before:inset-0 before:rounded-[12px] before:-z-10 before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_white_0%,_transparent_70%)] before:opacity-0 hover:before:opacity-100 before:transition-all before:duration-300`}
+        className="avatar-trail flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-colors relative bg-white outline outline-1 outline-gray-100 shadow-sm hover:text-gray-700"
       >
         <img 
           src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
           alt="User avatar" 
-          className="w-6 h-6 rounded-full"
+          className="w-6 h-6 rounded-full z-[2]"
         />
       </button>
     </div>

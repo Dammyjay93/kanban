@@ -19,3 +19,51 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.avatar-trail {
+  --offset: 1px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.avatar-trail::before {
+  content: '';
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent,
+    transparent 80%,
+    #3b82f6 80%,
+    #8b5cf6,
+    #ec4899,
+    transparent 95%
+  );
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-trail::after {
+  content: '';
+  position: absolute;
+  inset: var(--offset);
+  background: white;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.avatar-trail:hover::before {
+  opacity: 1;
+  animation: rotate-trail 1s cubic-bezier(0.3, 0.2, 0.6, 1);
+}
+
+@keyframes rotate-trail {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
