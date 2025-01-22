@@ -2,6 +2,7 @@
 
 import { TbShare, TbMoon, TbSun } from "react-icons/tb";
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface HeaderActionsProps {
   onShare: () => void;
@@ -76,10 +77,12 @@ export default function HeaderActions({ onShare, onThemeChange }: HeaderActionsP
           } as React.CSSProperties}
           className="avatar-trail flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-colors duration-100 relative bg-white outline outline-1 outline-gray-100 shadow-sm hover:text-gray-700"
         >
-          <img 
+          <Image 
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
             alt="User avatar" 
-            className="w-6 h-6 rounded-full z-[2]"
+            width={24}
+            height={24}
+            className="rounded-full z-[2]"
           />
         </button>
         <div 

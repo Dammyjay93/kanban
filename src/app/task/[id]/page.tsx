@@ -2,50 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import TaskDrawer from '@/app/components/task-drawer';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { Task } from '@/app/types';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'inProgress' | 'done';
-  createdAt: string;
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  assignees: {
-    id: string;
-    avatar: string;
-  }[];
-  subtasks?: {
-    id: string;
-    title: string;
-    completed: boolean;
-  }[];
-  activities?: {
-    id: string;
-    type: 'status_change' | 'priority_change' | 'assignee_change' | 'comment_added';
-    message: string;
-    timestamp: string;
-    userId: string;
-    userName: string;
-    details?: {
-      oldStatus?: Task['status'];
-      newStatus?: Task['status'];
-      comment?: string;
-    };
-  }[];
-}
-
-export default function TaskPage({ params }: { params: { id: string } }) {
+export default function TaskPage() {
   const [task, setTask] = useState<Task | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('kanban-tasks');
     if (savedTasks) {
       try {
         const tasks = JSON.parse(savedTasks);
-        const foundTask = tasks.find((t: Task) => t.id === params.id);
+        const foundTask = tasks.find((t: Task) => t.id === id);
         if (foundTask) {
           setTask(foundTask);
         }
@@ -53,7 +24,7 @@ export default function TaskPage({ params }: { params: { id: string } }) {
         console.error('Error loading task:', error);
       }
     }
-  }, [params.id]);
+  }, [id]);
 
   const handleTaskUpdate = (updatedTask: Task) => {
     const savedTasks = localStorage.getItem('kanban-tasks');

@@ -7,21 +7,14 @@ import {
   DotsThree, 
   Clock, 
   TextAlignLeft, 
-  User, 
-  CaretLeft,
-  CheckSquare,
-  ListChecks,
-  ChatCircle,
-  Activity as ActivityIcon,
   CaretDown,
   Plus,
-  Trash,
-  Share
+  Trash
 } from '@phosphor-icons/react';
 import { TbCalendarClock, TbFlag3, TbProgressCheck, TbShare, TbUser, TbCheckbox, TbMessage2, TbActivity, TbX, TbCheck } from 'react-icons/tb';
 import { MdModeEdit } from "react-icons/md";
 import PillSwitcher from './pill-switcher';
-import { Task, Activity, Comment } from '../types';
+import { Task, Activity } from '../types';
 
 type TabType = 'subtasks' | 'comments' | 'activities';
 
@@ -71,7 +64,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const [description, setDescription] = useState(task?.description || '');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
-  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tabOptions = [
@@ -155,20 +147,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     setEditingId(null);
   };
 
-  const getPriorityColor = (priority: string) => {
-    if (!task) return 'bg-gray-50 text-gray-700';
-    switch (priority) {
-      case 'Low':
-        return 'bg-blue-50 text-blue-700';
-      case 'Medium':
-        return 'bg-yellow-50 text-yellow-700';
-      case 'High':
-        return 'bg-red-50 text-red-700';
-      default:
-        return 'bg-gray-50 text-gray-700';
-    }
-  };
-
   const handleShare = async () => {
     if (!task) return;
     const taskUrl = `${window.location.origin}/task/${task.id}`;
@@ -186,16 +164,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     } catch (error) {
       console.error('Error sharing:', error);
     }
-  };
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (!task) return;
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
-    setMousePosition({
-      x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * 100,
-    });
   };
 
   const renderTabContent = () => {

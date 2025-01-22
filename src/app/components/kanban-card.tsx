@@ -1,7 +1,8 @@
 'use client';
 
-import { TbDots, TbFlag, TbMessage2, TbCalendarClock, TbCircleDashed, TbSubtask, TbFlag3 } from "react-icons/tb";
+import { TbDots, TbFlag3, TbCalendarClock, TbCircleDashed, TbSubtask } from "react-icons/tb";
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface KanbanCardProps {
   id: string;
@@ -11,7 +12,6 @@ interface KanbanCardProps {
   status: 'todo' | 'inProgress' | 'done';
   priority: 'Low' | 'Medium' | 'High';
   dueDate?: string;
-  comments?: number;
   assignees: {
     id: string;
     avatar: string;
@@ -58,7 +58,6 @@ export default function KanbanCard({
   description,
   priority,
   dueDate,
-  comments = 0,
   assignees,
   subtasks = [],
   onClick,
@@ -163,11 +162,13 @@ export default function KanbanCard({
       <div className="flex items-center justify-between">
         <div className="flex -space-x-2">
           {assignees.map((assignee, index) => (
-            <img
+            <Image
               key={assignee.id}
               src={assignee.avatar}
               alt={`Assignee ${index + 1}`}
-              className="w-6 h-6 rounded-full border-2 border-white"
+              width={24}
+              height={24}
+              className="rounded-full border-2 border-white"
             />
           ))}
         </div>
