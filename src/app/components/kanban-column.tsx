@@ -143,10 +143,10 @@ export default function KanbanColumn({
         </div>
       </div>
 
-      <div className={`px-1 pt-2 pb-1 overflow-hidden`}>
+      <div className="px-1 pt-2 pb-1">
         <motion.div 
           {...kanbanAnimations.layout}
-          className="space-y-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2"
+          className="space-y-1 pr-2 -mr-2"
           style={{
             willChange: isDragOver ? 'transform' : 'auto'
           }}

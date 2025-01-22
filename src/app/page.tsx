@@ -177,8 +177,8 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full pt-[156px] pb-6">
-        <div className={`p-6 min-h-[calc(100vh-156px-1.5rem)] ${
+      <main className="flex-1 max-w-5xl mx-auto w-full pt-[132px] pr-2 pl-2 pb-6">
+        <div className={`p-6 min-h-[calc(100vh-132px-1.5rem)] ${
           activeView !== 'board' ? 'bg-white rounded-lg shadow-sm' : ''
         }`}>
           <AnimatePresence mode="wait">

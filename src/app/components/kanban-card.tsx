@@ -187,10 +187,6 @@ export default function KanbanCard({
             <TbCircleDashed className="w-3.5 h-3.5" />
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="flex items-center gap-1">
-            <TbMessage2 className="w-3.5 h-3.5" />
-            <span>{comments}</span>
-          </div>
         </div>
       </div>
     </div>

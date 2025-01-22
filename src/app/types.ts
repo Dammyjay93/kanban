@@ -12,7 +12,7 @@ export type Task = {
   }[];
   subtasks: { id: string; title: string; completed: boolean; }[];
   activities: Activity[];
-  comments: Comment[];
+  comments?: Comment[];
 };
 
 export type Activity = {

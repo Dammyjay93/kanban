@@ -295,72 +295,9 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               <TbMessage2 className="w-4 h-4 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Comments</span>
             </div>
-            <div className="space-y-4">
-              {task.activities
-                ?.filter(activity => activity.type === 'comment_added')
-                .map(activity => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
-                      {activity.userId}
-                    </div>
-                    <div>
-                      <p className="text-sm">
-                        <span className="font-medium text-gray-900">{activity.userName}</span>{' '}
-                        <span className="text-gray-700">{activity.details?.comment}</span>
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+            <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-500">Comments functionality coming soon...</p>
             </div>
-            <form 
-              className="flex gap-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const commentText = (e.target as HTMLFormElement).comment.value.trim();
-                if (!commentText) return;
-
-                const newActivity: Activity = {
-                  id: Date.now().toString(),
-                  type: 'comment_added',
-                  message: 'Added a comment',
-                  timestamp: new Date().toISOString(),
-                  userId: 'CT', // This should come from your auth system
-                  userName: 'Calum Tyler', // This should come from your auth system
-                  details: {
-                    comment: commentText
-                  }
-                };
-
-                handleChange('activities', [...(task.activities || []), newActivity]);
-
-                // Reset the form
-                (e.target as HTMLFormElement).reset();
-              }}
-            >
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
-                CT
-              </div>
-              <div className="flex-1">
-                <textarea
-                  name="comment"
-                  placeholder="Write a comment..."
-                  className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={3}
-                  required
-                />
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Comment
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
         );
       case 'activities':
