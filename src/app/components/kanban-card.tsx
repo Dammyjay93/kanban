@@ -1,6 +1,6 @@
 'use client';
 
-import { TbDots, TbFlag, TbMessage2, TbCalendarClock, TbCircleDashed, TbSubtask } from "react-icons/tb";
+import { TbDots, TbFlag, TbMessage2, TbCalendarClock, TbCircleDashed, TbSubtask, TbFlag3 } from "react-icons/tb";
 import { useState } from 'react';
 
 interface KanbanCardProps {
@@ -116,7 +116,7 @@ export default function KanbanCard({
     >
       <div className="flex items-center gap-2 mb-2">
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityStyle(priority)}`}>
-          <TbFlag className="w-3 h-3" />
+          <TbFlag3 className="w-3 h-3" />
           {priority}
         </span>
         <div className="relative ml-auto">

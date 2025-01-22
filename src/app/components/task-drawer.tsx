@@ -18,6 +18,8 @@ import {
   Trash,
   Share
 } from '@phosphor-icons/react';
+import { TbCalendarClock, TbFlag3, TbProgressCheck, TbShare, TbUser, TbCheckbox, TbMessage2, TbActivity } from 'react-icons/tb';
+import PillSwitcher from './pill-switcher';
 
 type Activity = {
   id: string;
@@ -51,6 +53,7 @@ interface Task {
     completed: boolean;
   }[];
   activities?: Activity[];
+  comments?: Comment[];
 }
 
 type TabType = 'subtasks' | 'comments' | 'activities';
@@ -99,6 +102,13 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const [description, setDescription] = useState(task?.description || '');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+
+  const tabOptions = [
+    { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox },
+    { id: 'comments', label: 'Comments', icon: TbMessage2 },
+    { id: 'activities', label: 'Activities', icon: TbActivity },
+  ];
 
   useEffect(() => {
     if (task) {
@@ -167,6 +177,15 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     }
   };
 
+  const handleMouseMove = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+    setMousePosition({
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100,
+    });
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'subtasks':
@@ -176,9 +195,10 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TbCheckbox className="w-4 h-4 text-gray-400" />
               <h3 className="text-sm font-medium text-gray-900">Subtasks</h3>
-              <div className="bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded">
+              <div className="bg-gray-50 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                 {completedSubtasks}/{totalSubtasks}
               </div>
             </div>
@@ -262,7 +282,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <ChatCircle className="w-5 h-5 text-gray-400" />
+              <TbMessage2 className="w-4 h-4 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Comments</span>
             </div>
             <div className="space-y-4">
@@ -340,11 +360,11 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-gray-400" />
+              <Activity className="w-4 h-4 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Activities</span>
             </div>
             <div className="space-y-4">
-              {task.activities?.length === 0 ? (
+              {!task.activities?.length ? (
                 <p className="text-sm text-gray-500">No activities yet</p>
               ) : (
                 task.activities?.map(activity => (
@@ -396,35 +416,31 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="fixed right-4 top-4 bottom-4 h-auto w-[456px] rounded-lg bg-white shadow-lg z-50 flex flex-col"
+        className="fixed right-4 top-4 bottom-4 h-auto w-[440px] rounded-[24px] bg-white shadow-lg z-50 flex flex-col"
       >
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50"
-            >
-              <X weight="bold" className="w-5 h-5" />
-            </button>
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleShare}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50"
-              >
-                <Share weight="regular" className="w-5 h-5" />
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                <X weight="bold" className="w-4 h-4" />
+              </button>
+              <h2 className="text-base font-medium text-gray-900">Task Details</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handleShare} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                <TbShare className="w-4 h-4" />
               </button>
               <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
                 <DotsThree weight="bold" className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <h2 className="text-lg font-medium text-gray-900">Task Details</h2>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto font-sans">
-          <div className="p-6 space-y-6">
+          <div className="p-6 pt-4 space-y-6">
             {/* Title Section */}
             <div>
               <input
@@ -432,7 +448,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={handleTitleSubmit}
-                className="w-full text-2xl font-semibold text-gray-900 border-0 p-0 focus:outline-none focus:ring-0"
+                className="w-full text-xl font-medium text-gray-900 border-0 p-0 focus:outline-none focus:ring-0"
                 placeholder="Task title"
               />
             </div>
@@ -442,8 +458,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               {/* Created Time */}
               <div className="flex items-center">
                 <div className="flex items-center gap-2 w-48">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Created time</span>
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-regular text-gray-900">Created time</span>
                 </div>
                 <span className="text-sm text-gray-500">{task.createdAt}</span>
               </div>
@@ -451,8 +467,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               {/* Status */}
               <div className="flex items-center">
                 <div className="flex items-center gap-2 w-48">
-                  <CheckSquare className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Status</span>
+                  <TbProgressCheck className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-regular text-gray-900">Status</span>
                 </div>
                 <div className="relative inline-block">
                   <select
@@ -494,8 +510,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               {/* Priority */}
               <div className="flex items-center">
                 <div className="flex items-center gap-2 w-48">
-                  <ListChecks className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Priority</span>
+                  <TbFlag3 className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-regular text-gray-900">Priority</span>
                 </div>
                 <div className="relative inline-block">
                   <select
@@ -517,8 +533,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               {/* Due Date */}
               <div className="flex items-center">
                 <div className="flex items-center gap-2 w-48">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Due Date</span>
+                  <TbCalendarClock className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-regular text-gray-900">Due Date</span>
                 </div>
                 <input
                   type="date"
@@ -531,8 +547,8 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               {/* Assignees */}
               <div className="flex items-center">
                 <div className="flex items-center gap-2 w-48">
-                  <User className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Assignees</span>
+                  <TbUser className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-regular text-gray-900">Assignees</span>
                 </div>
                 <div className="flex -space-x-2">
                   {task.assignees.map((assignee, index) => (
@@ -547,65 +563,33 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
               </div>
             </div>
 
+            
+
             {/* Description */}
-            <div className="space-y-2">
+            <div className="space-y-2 mb-2">
               <div className="flex items-center gap-2">
-                <TextAlignLeft className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Description</span>
+                <TextAlignLeft className="w-4 h-4 text-gray-400" />
+                <span className="text-sm font-regular text-gray-900">Description</span>
               </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={handleDescriptionSubmit}
                 rows={4}
-                className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-transparent"
                 placeholder="Add a more detailed description..."
               />
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-200">
-              <div className="flex gap-8">
-                <button
-                  onClick={() => setActiveTab('subtasks')}
-                  className={`pb-4 px-2 text-sm font-medium relative ${
-                    activeTab === 'subtasks'
-                      ? 'text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Subtasks
-                  {activeTab === 'subtasks' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab('comments')}
-                  className={`pb-4 px-2 text-sm font-medium relative ${
-                    activeTab === 'comments'
-                      ? 'text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Comments
-                  {activeTab === 'comments' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab('activities')}
-                  className={`pb-4 px-2 text-sm font-medium relative ${
-                    activeTab === 'activities'
-                      ? 'text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Activities
-                  {activeTab === 'activities' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
-                  )}
-                </button>
-              </div>
+            <div>
+              <PillSwitcher
+                options={tabOptions}
+                activeId={activeTab}
+                onChange={(id) => setActiveTab(id as TabType)}
+                fontWeight="regular"
+                fullWidth
+              />
             </div>
 
             {/* Tab Content */}
