@@ -535,17 +535,23 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                       <TbCalendarClock className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-regular text-gray-900">Due Date</span>
                     </div>
-                    <input
-                      type="date"
-                      value={task.dueDate || ''}
-                      onChange={(e) => handleChange('dueDate', e.target.value)}
-                      className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none p-0 
-                        [&::-webkit-calendar-picker-indicator]:text-gray-400
-                        [&::-webkit-calendar-picker-indicator]:hover:text-gray-900
-                        [&::-webkit-calendar-picker-indicator]:cursor-pointer
-                        [&::-webkit-calendar-picker-indicator]:p-0
-                        [&::-webkit-calendar-picker-indicator]:opacity-100"
-                    />
+                    <div className="relative inline-block">
+                      <input
+                        type="date"
+                        value={task.dueDate || ''}
+                        onChange={(e) => handleChange('dueDate', e.target.value)}
+                        className="text-sm text-gray-500 appearance-none bg-gray-100 rounded-full px-2.5 py-1 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none min-w-[130px]"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const dateInput = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          dateInput.showPicker();
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0"
+                        aria-label="Select date"
+                      />
+                    </div>
                   </div>
 
                   {/* Assignees */}
