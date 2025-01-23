@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { DotsThree, Plus } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import KanbanCard from './kanban-card';
 import { kanbanAnimations } from '../constants/animations';
 
@@ -78,9 +78,18 @@ export default function KanbanColumn({
   const [isDragOver, setIsDragOver] = useState(false);
   const [dropPosition, setDropPosition] = useState<number | null>(null);
   const [draggedTask, setDraggedTask] = useState<{ id: string, sourceColumn: string } | null>(null);
+  const [lastDragOverTime, setLastDragOverTime] = useState(0);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    
+    // Debounce drag over events to prevent flickering
+    const now = Date.now();
+    if (now - lastDragOverTime < 50) { // Only process events every 50ms
+      return;
+    }
+    setLastDragOverTime(now);
+    
     setIsDragOver(true);
 
     // Calculate drop position
@@ -100,7 +109,7 @@ export default function KanbanColumn({
       }
     }
     setDropPosition(position);
-  };
+  }, [tasks.length, lastDragOverTime]);
 
   return (
     <div
