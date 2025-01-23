@@ -115,7 +115,7 @@ export default function KanbanCard({
         active:cursor-grabbing"
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityStyle(priority)}`}>
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium select-none ${getPriorityStyle(priority)}`}>
           <TbFlag3 className="w-3 h-3" />
           {priority}
         </span>
@@ -137,7 +137,7 @@ export default function KanbanCard({
                   // Handle edit action
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50"
+                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 select-none"
               >
                 Edit
               </button>
@@ -147,7 +147,7 @@ export default function KanbanCard({
                   onDelete(id);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50"
+                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50 select-none"
               >
                 Delete
               </button>
@@ -156,8 +156,8 @@ export default function KanbanCard({
         </div>
       </div>
 
-      <h3 className="text-sm font-medium text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-500 mb-3 line-clamp-2">{description}</p>
+      <h3 className="text-sm font-medium text-gray-900 mb-1 select-none">{title}</h3>
+      <p className="text-sm text-gray-500 mb-3 line-clamp-2 select-none">{description}</p>
 
       <div className="flex items-center justify-between">
         <div className="flex -space-x-2">
@@ -177,16 +177,16 @@ export default function KanbanCard({
           {dueDate && (
             <div className="flex items-center gap-1">
               <TbCalendarClock className="w-3.5 h-3.5" />
-              <span>{getRelativeTime(dueDate)}</span>
+              <span className="select-none">{getRelativeTime(dueDate)}</span>
             </div>
           )}
           <div className="flex items-center gap-1">
             <TbSubtask className="w-3.5 h-3.5" />
-            <span>{completedSubtasks}/{subtasks.length}</span>
+            <span className="select-none">{completedSubtasks}/{subtasks.length}</span>
           </div>
           <div className="flex items-center gap-1">
             <TbCircleDashed className="w-3.5 h-3.5" />
-            <span>{Math.round(progress)}%</span>
+            <span className="select-none">{Math.round(progress)}%</span>
           </div>
         </div>
       </div>
