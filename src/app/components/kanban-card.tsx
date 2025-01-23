@@ -116,9 +116,10 @@ export default function KanbanCard({
       className={`relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
         border border-[#070708]/[0.09]
         
-        hover:bg-[#F9F9FA]
-        hover:border-[#070708]/[0.12]
-        hover:shadow-sm
+        [@media(hover:hover)]:hover:bg-[#F9F9FA]
+        [@media(hover:hover)]:hover:border-[#070708]/[0.12]
+        [@media(hover:hover)]:hover:shadow-sm
+        
         active:cursor-grabbing
         select-none
         [user-select:none]

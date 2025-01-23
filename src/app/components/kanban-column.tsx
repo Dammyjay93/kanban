@@ -158,7 +158,7 @@ export default function KanbanColumn({
               <motion.div 
                 key={task.id} 
                 className="relative"
-                {...kanbanAnimations.card}
+                {...(isDragging ? {} : kanbanAnimations.card)}
                 animate={isDragging ? 'dragging' : 'default'}
               >
                 {dropPosition === index && (
@@ -168,7 +168,7 @@ export default function KanbanColumn({
                 )}
                 <div 
                   className={`kanban-card w-full transition-all duration-200 ${
-                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !border-gray-500 overflow-hidden' : ''
+                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !rounded-[12px] !border-gray-500 relative after:absolute after:inset-0 after:bg-[#DEDEDE] after:rounded-[12px] after:pointer-events-none' : ''
                   }`}
                   style={{
                     willChange: isDragOver ? 'transform' : 'auto'
