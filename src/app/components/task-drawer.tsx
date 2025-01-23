@@ -64,8 +64,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const [description, setDescription] = useState(task?.description || '');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
-  const [drawerHeight, setDrawerHeight] = useState(40);
-  const [hasReachedInitial, setHasReachedInitial] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tabOptions = [
@@ -79,8 +77,6 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
       setTitle(task.title);
       setOriginalTitle(task.title);
       setDescription(task.description);
-      setDrawerHeight(40);
-      setHasReachedInitial(false);
       document.body.style.overflow = 'hidden';
     }
     return () => {
@@ -335,7 +331,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     }
   };
 
-  const onDragEnd = (event: any, info: { offset: { y: number }, velocity: { y: number } }) => {
+  const onDragEnd = (event: PointerEvent, info: { offset: { y: number }, velocity: { y: number } }) => {
     if (info.offset.y > 100 || info.velocity.y > 300) {
       onClose();
     }
