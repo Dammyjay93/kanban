@@ -101,6 +101,13 @@ export default function KanbanCard({
       style={{
         '--mouse-x': `${mousePosition.x}%`,
         '--mouse-y': `${mousePosition.y}%`,
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        KhtmlUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        userSelect: 'none',
+        touchAction: 'none'
       } as React.CSSProperties}
       className="relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
         border border-[#070708]/[0.06]
@@ -112,7 +119,11 @@ export default function KanbanCard({
         [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.08)]
         hover:bg-[#F9F9FA]
         active:translate-y-[0.5px]
-        active:cursor-grabbing"
+        active:cursor-grabbing
+        select-none touch-none
+        [user-select:none]
+        [-webkit-user-select:none]
+        [-webkit-touch-callout:none]"
     >
       <div className="flex items-center gap-2 mb-2">
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium select-none ${getPriorityStyle(priority)}`}>
