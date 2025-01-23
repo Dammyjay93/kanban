@@ -482,8 +482,16 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                               newStatus: newStatus
                             }
                           };
-                          handleChange('status', newStatus);
-                          handleChange('activities', [...(task.activities || []), newActivity]);
+                          
+                          // Update task status and add activity
+                          const updatedTask = {
+                            ...task,
+                            status: newStatus,
+                            activities: [...(task.activities || []), newActivity]
+                          };
+                          
+                          // Update the task which will trigger board rerender
+                          onUpdate(updatedTask);
                         }}
                         className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-gray-900 [&>_option]:pl-2.5`}
                       >
@@ -531,7 +539,12 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                       type="date"
                       value={task.dueDate || ''}
                       onChange={(e) => handleChange('dueDate', e.target.value)}
-                      className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none p-0 [&::-webkit-calendar-picker-indicator]:ml-[-4px]"
+                      className="text-sm text-gray-500 bg-transparent border-0 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none p-0 
+                        [&::-webkit-calendar-picker-indicator]:text-gray-400
+                        [&::-webkit-calendar-picker-indicator]:hover:text-gray-900
+                        [&::-webkit-calendar-picker-indicator]:cursor-pointer
+                        [&::-webkit-calendar-picker-indicator]:p-0
+                        [&::-webkit-calendar-picker-indicator]:opacity-100"
                     />
                   </div>
 
