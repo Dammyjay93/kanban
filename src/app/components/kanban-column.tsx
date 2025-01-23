@@ -104,7 +104,7 @@ export default function KanbanColumn({
 
   return (
     <div
-      className={`w-full bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col h-fit ${
+      className={`w-full bg-[#F1F1F1] rounded-[16px] shadow-sm flex flex-col h-fit ${
         isDragOver ? `border ${styles.border}` : 'border border-[#EBEBEB]'
       }`}
       onDragOver={handleDragOver}
@@ -203,7 +203,7 @@ export default function KanbanColumn({
           )}
           <button
             onClick={() => onAddCard(status)}
-            className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-white rounded-[12px] transition-colors duration-150"
+            className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 bg-transparent hover:bg-white rounded-[12px] transition-all duration-480"
           >
             <Plus className="w-4 h-4" />
             <span>Add task</span>

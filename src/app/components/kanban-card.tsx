@@ -67,14 +67,17 @@ export default function KanbanCard({
   const progress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : 0;
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [showMenu, setShowMenu] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const element = event.currentTarget;
-    const rect = element.getBoundingClientRect();
-    setMousePosition({
-      x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * 100,
-    });
+    if (!isDragging) {
+      const element = event.currentTarget;
+      const rect = element.getBoundingClientRect();
+      setMousePosition({
+        x: ((event.clientX - rect.left) / rect.width) * 100,
+        y: ((event.clientY - rect.top) / rect.height) * 100,
+      });
+    }
   };
 
   return (
@@ -87,6 +90,7 @@ export default function KanbanCard({
         setShowMenu(false);
       }}
       onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+        setIsDragging(true);
         e.dataTransfer.setData('taskId', id);
         e.dataTransfer.setData('sourceIndex', index.toString());
         if (e.currentTarget instanceof HTMLElement) {
@@ -94,13 +98,14 @@ export default function KanbanCard({
         }
       }}
       onDragEnd={(e: React.DragEvent<HTMLDivElement>) => {
+        setIsDragging(false);
         if (e.currentTarget instanceof HTMLElement) {
           e.currentTarget.style.opacity = '1';
         }
       }}
       style={{
-        '--mouse-x': `${mousePosition.x}%`,
-        '--mouse-y': `${mousePosition.y}%`,
+        '--mouse-x': isDragging ? '50%' : `${mousePosition.x}%`,
+        '--mouse-y': isDragging ? '50%' : `${mousePosition.y}%`,
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         KhtmlUserSelect: 'none',
@@ -108,21 +113,17 @@ export default function KanbanCard({
         msUserSelect: 'none',
         userSelect: 'none'
       } as React.CSSProperties}
-      className="relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
-        border border-[#070708]/[0.06]
-        before:absolute before:inset-0 before:rounded-[12px] before:-z-10
-        before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_white_0%,_transparent_50%)]
-        before:transition-[background-position] before:duration-300
-        after:absolute after:inset-0 after:rounded-[12px] after:-z-20
-        after:shadow-[0_17px_5px_rgba(7,7,8,0.00),0_11px_4px_rgba(7,7,8,0.01),0_6px_4px_rgba(7,7,8,0.02),0_3px_3px_rgba(7,7,8,0.04),0_1px_1px_rgba(7,7,8,0.05)]
-        [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.08)]
+      className={`relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
+        border border-[#070708]/[0.09]
+        
         hover:bg-[#F9F9FA]
-        active:translate-y-[0.5px]
+        hover:border-[#070708]/[0.12]
+        hover:shadow-sm
         active:cursor-grabbing
         select-none
         [user-select:none]
         [-webkit-user-select:none]
-        [-webkit-touch-callout:none]"
+        [-webkit-touch-callout:none]`}
     >
       <div className="flex items-center gap-2 mb-2">
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium select-none ${getPriorityStyle(priority)}`}>
