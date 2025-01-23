@@ -67,9 +67,9 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tabOptions = [
-    { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox },
-    { id: 'comments', label: 'Comments', icon: TbMessage2 },
-    { id: 'activities', label: 'Activities', icon: TbActivity },
+    { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox, mobileLabel: '' },
+    { id: 'comments', label: 'Comments', icon: TbMessage2, mobileLabel: '' },
+    { id: 'activities', label: 'Activities', icon: TbActivity, mobileLabel: '' },
   ];
 
   useEffect(() => {
@@ -585,13 +585,13 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                 </div>
 
                 {/* Tabs */}
-                <div>
+                <div className="w-fit">
                   <PillSwitcher
                     options={tabOptions}
                     activeId={activeTab}
                     onChange={(id) => setActiveTab(id as TabType)}
                     fontWeight="regular"
-                    fullWidth
+                    fullWidth={false}
                   />
                 </div>
 
