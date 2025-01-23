@@ -11,16 +11,23 @@ interface ViewSwitcherProps {
 }
 
 const viewOptions = [
-  { id: 'board', label: 'Board', icon: TbLayoutKanban },
-  { id: 'list', label: 'List', icon: TbList },
-  { id: 'timeline', label: 'Timeline', icon: TbTimeline },
-  { id: 'calendar', label: 'Calendar', icon: TbCalendar },
+  { id: 'board', label: 'Board', icon: TbLayoutKanban, mobileLabel: '' },
+  { id: 'list', label: 'List', icon: TbList, mobileLabel: '' },
+  { id: 'timeline', label: 'Timeline', icon: TbTimeline, mobileLabel: '' },
+  { id: 'calendar', label: 'Calendar', icon: TbCalendar, mobileLabel: '' },
 ];
 
 export default function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  
+  const options = viewOptions.map(option => ({
+    ...option,
+    label: isMobile ? option.mobileLabel : option.label
+  }));
+
   return (
     <PillSwitcher
-      options={viewOptions}
+      options={options}
       activeId={activeView}
       onChange={(id) => onViewChange(id as ViewType)}
       fontWeight="regular"

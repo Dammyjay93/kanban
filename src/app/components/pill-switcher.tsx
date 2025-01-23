@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 interface Option {
   id: string;
   label: string;
+  mobileLabel?: string;
   icon?: React.ComponentType<{ className?: string }>;
 }
 
@@ -44,7 +45,7 @@ export default function PillSwitcher({ options, activeId, onChange, fontWeight =
   };
 
   return (
-    <div className={`${fullWidth ? 'flex' : 'inline-flex'} rounded-[12px] bg-white outline outline-1 outline-gray-100 shadow-sm p-1 relative`}>
+    <div className={`${fullWidth ? 'flex w-full' : 'inline-flex w-fit'} rounded-[12px] bg-white outline outline-1 outline-gray-100 shadow-sm p-1.5 relative`}>
       <motion.div 
         layout
         transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
@@ -74,7 +75,7 @@ export default function PillSwitcher({ options, activeId, onChange, fontWeight =
                 } as React.CSSProperties
               : undefined
           }
-          className={`flex items-center gap-2 px-4 py-2 rounded-[12px] text-sm ${fontWeight === 'medium' ? 'font-medium' : 'font-regular'} transition-colors ${fullWidth ? 'flex-1' : ''} ${
+          className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-[12px] text-sm ${fontWeight === 'medium' ? 'font-medium' : 'font-regular'} transition-colors ${fullWidth ? 'flex-1' : ''} ${
             activeId === id
               ? [
                   'relative',
@@ -87,7 +88,7 @@ export default function PillSwitcher({ options, activeId, onChange, fontWeight =
           }`}
         >
           {Icon && <Icon className="w-4 h-4" />}
-          {label}
+          {label && <span className="hidden sm:inline">{label}</span>}
         </button>
       ))}
     </div>
