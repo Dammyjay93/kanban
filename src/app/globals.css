@@ -99,3 +99,12 @@ body {
   transition: opacity 0.2s ease;
   transition-delay: 0s;
 }
+
+.fixed-pattern {
+  background-image: radial-gradient(#CDD0DB 1px, #F6F6F7 1px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+}

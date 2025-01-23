@@ -108,84 +108,139 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F7] [background-image:radial-gradient(#CDD0DB_1px,#F6F6F7_1px)] [background-size:20px_20px] [background-attachment:fixed] flex flex-col">
-      <header className="flex-shrink-0 fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 text-gray-900">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.2426 7.75736C18.5858 10.1005 18.5858 13.8995 16.2426 16.2426C13.8995 18.5858 10.1005 18.5858 7.75736 16.2426C5.41421 13.8995 5.41421 10.1005 7.75736 7.75736C10.1005 5.41421 13.8995 5.41421 16.2426 7.75736" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <span className="text-lg font-bold text-gray-900">Kanbanify</span>
-              </div>
-              <div className="w-px h-4 bg-gray-200" />
-              <div className="group flex items-center gap-2 h-8 cursor-pointer" onClick={() => {
-                setIsEditingTitle(true);
-                setOriginalTitle(title);
-              }}>
-                {isEditingTitle ? (
-                  <div className="flex items-center gap-2 border border-[#18181B]/10 rounded-[10px]">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-lg font-medium text-gray-900 bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
-                      size={title.length}
-                    />
-                    <div className="flex items-center gap-1 pr-2">
-                      <button 
-                        onClick={handleTitleCancel}
-                        type="button"
-                        className="p-1 rounded-md bg-[#18181B]/[0.06]"
-                      >
-                        <TbX className="w-3.5 h-3.5 text-gray-700" />
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTitleSubmit();
-                        }}
-                        type="button" 
-                        className="p-1 rounded-md bg-[#18181B]/[0.06]"
-                      >
-                        <TbCheck className="w-3.5 h-3.5 text-gray-700" />
-                      </button>
-                    </div>
+    <>
+      <div className="fixed inset-0 bg-[#F6F6F7] fixed-pattern" />
+      <div className="relative flex flex-col h-[100dvh] overflow-hidden">
+        <div className="sticky top-0 w-full bg-white/80 backdrop-blur-md shadow-sm z-10">
+          <div className="w-full max-w-5xl mx-auto px-6 py-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 text-gray-900">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16.2426 7.75736C18.5858 10.1005 18.5858 13.8995 16.2426 16.2426C13.8995 18.5858 10.1005 18.5858 7.75736 16.2426C5.41421 13.8995 5.41421 10.1005 7.75736 7.75736C10.1005 5.41421 13.8995 5.41421 16.2426 7.75736" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                ) : (
-                  <>
-                    <h1 className="text-lg font-medium text-gray-600 group-hover:text-gray-900">{title}</h1>
-                    <div className="text-gray-400 hover:text-gray-900 group-hover:text-gray-900 hover:bg-[#18181B]/[0.04] group-hover:bg-[#18181B]/[0.04] rounded-lg p-1 -m-1">
-                      <MdModeEdit className="w-4 h-4" />
-                    </div>
-                  </>
-                )}
+                  <span className="text-lg font-bold text-gray-900">Kanbanify</span>
+                </div>
+                <div className="block sm:hidden">
+                  <HeaderActions onShare={handleShare} onThemeChange={handleThemeChange} />
+                </div>
+                <div className="hidden sm:block w-px h-4 bg-gray-200" />
+                <div className="hidden sm:block flex-1">
+                  <div className="flex items-center gap-2 h-8 cursor-pointer" onClick={() => {
+                    setIsEditingTitle(true);
+                    setOriginalTitle(title);
+                  }}>
+                    {isEditingTitle ? (
+                      <div className="flex items-center gap-2 border border-[#18181B]/10 rounded-[10px]">
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-lg font-medium text-gray-900 bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
+                          size={title.length}
+                        />
+                        <div className="flex items-center gap-1 pr-2">
+                          <button 
+                            onClick={handleTitleCancel}
+                            type="button"
+                            className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                          >
+                            <TbX className="w-3.5 h-3.5 text-gray-700" />
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTitleSubmit();
+                            }}
+                            type="button" 
+                            className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                          >
+                            <TbCheck className="w-3.5 h-3.5 text-gray-700" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h1 className="text-lg font-medium text-gray-600 group-hover:text-gray-900">{title}</h1>
+                        <div className="text-gray-400 hover:text-gray-900 group-hover:text-gray-900 hover:bg-[#18181B]/[0.04] group-hover:bg-[#18181B]/[0.04] rounded-lg p-1 -m-1">
+                          <MdModeEdit className="w-4 h-4" />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <ViewSwitcher activeView={activeView} onViewChange={setActiveView} />
-              <HeaderActions onShare={handleShare} onThemeChange={handleThemeChange} />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="block sm:hidden group flex items-center gap-2 h-8 cursor-pointer mb-4" onClick={() => {
+                  setIsEditingTitle(true);
+                  setOriginalTitle(title);
+                }}>
+                  {isEditingTitle ? (
+                    <div className="flex items-center gap-2 border border-[#18181B]/10 rounded-[10px]">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-lg font-medium text-gray-900 bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
+                        size={title.length}
+                      />
+                      <div className="flex items-center gap-1 pr-2">
+                        <button 
+                          onClick={handleTitleCancel}
+                          type="button"
+                          className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                        >
+                          <TbX className="w-3.5 h-3.5 text-gray-700" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTitleSubmit();
+                          }}
+                          type="button" 
+                          className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                        >
+                          <TbCheck className="w-3.5 h-3.5 text-gray-700" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <h1 className="text-lg font-medium text-gray-600 group-hover:text-gray-900">{title}</h1>
+                      <div className="text-gray-400 hover:text-gray-900 group-hover:text-gray-900 hover:bg-[#18181B]/[0.04] group-hover:bg-[#18181B]/[0.04] rounded-lg p-1 -m-1">
+                        <MdModeEdit className="w-4 h-4" />
+                      </div>
+                    </>
+                  )}
+                </div>
+                <ViewSwitcher activeView={activeView} onViewChange={setActiveView} />
+                <div className="hidden sm:block">
+                  <HeaderActions onShare={handleShare} onThemeChange={handleThemeChange} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full pt-[132px] pr-2 pl-2 pb-6">
-        <div className={`p-6 min-h-[calc(100vh-132px-1.5rem)] ${
-          activeView !== 'board' ? 'bg-white rounded-lg shadow-sm' : ''
-        }`}>
-          <AnimatePresence mode="wait">
-            {renderContent()}
-          </AnimatePresence>
+        <div className="flex-1 overflow-auto">
+          <div className="w-full max-w-5xl mx-auto px-6 py-6">
+            <div className={activeView !== 'board' ? 'bg-white rounded-lg shadow-sm' : ''}>
+              <AnimatePresence mode="wait">
+                {renderContent()}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

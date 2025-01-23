@@ -104,7 +104,7 @@ export default function KanbanColumn({
 
   return (
     <div
-      className={`w-80 bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col h-fit ${
+      className={`w-full bg-[#F1F1F1] rounded-lg shadow-sm flex flex-col h-fit ${
         isDragOver ? `border ${styles.border}` : 'border border-[#EBEBEB]'
       }`}
       onDragOver={handleDragOver}

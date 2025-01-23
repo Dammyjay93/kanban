@@ -125,37 +125,45 @@ export default function BoardView() {
   };
 
   return (
-    <div className="flex gap-6 h-full">
-      <KanbanColumn
-        title="To Do"
-        status="todo"
-        tasks={tasks.filter(task => task.status === 'todo')}
-        onDrop={(taskId, targetIndex) => moveTask(taskId, 'todo', targetIndex)}
-        onReorder={reorderTask}
-        onAddCard={addCard}
-        onTaskClick={handleTaskClick}
-        onDeleteTask={deleteTask}
-      />
-      <KanbanColumn
-        title="In Progress"
-        status="inProgress"
-        tasks={tasks.filter(task => task.status === 'inProgress')}
-        onDrop={(taskId, targetIndex) => moveTask(taskId, 'inProgress', targetIndex)}
-        onReorder={reorderTask}
-        onAddCard={addCard}
-        onTaskClick={handleTaskClick}
-        onDeleteTask={deleteTask}
-      />
-      <KanbanColumn
-        title="Done"
-        status="done"
-        tasks={tasks.filter(task => task.status === 'done')}
-        onDrop={(taskId, targetIndex) => moveTask(taskId, 'done', targetIndex)}
-        onReorder={reorderTask}
-        onAddCard={addCard}
-        onTaskClick={handleTaskClick}
-        onDeleteTask={deleteTask}
-      />
+    <div className="flex gap-6 h-full overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0">
+      <div className="flex gap-6 min-w-max md:min-w-0 md:w-full">
+        <div className="w-[75vw] md:flex-1">
+          <KanbanColumn
+            title="To Do"
+            status="todo"
+            tasks={tasks.filter(task => task.status === 'todo')}
+            onDrop={(taskId, targetIndex) => moveTask(taskId, 'todo', targetIndex)}
+            onReorder={reorderTask}
+            onAddCard={addCard}
+            onTaskClick={handleTaskClick}
+            onDeleteTask={deleteTask}
+          />
+        </div>
+        <div className="w-[75vw] md:flex-1">
+          <KanbanColumn
+            title="In Progress"
+            status="inProgress"
+            tasks={tasks.filter(task => task.status === 'inProgress')}
+            onDrop={(taskId, targetIndex) => moveTask(taskId, 'inProgress', targetIndex)}
+            onReorder={reorderTask}
+            onAddCard={addCard}
+            onTaskClick={handleTaskClick}
+            onDeleteTask={deleteTask}
+          />
+        </div>
+        <div className="w-[75vw] md:flex-1">
+          <KanbanColumn
+            title="Done"
+            status="done"
+            tasks={tasks.filter(task => task.status === 'done')}
+            onDrop={(taskId, targetIndex) => moveTask(taskId, 'done', targetIndex)}
+            onReorder={reorderTask}
+            onAddCard={addCard}
+            onTaskClick={handleTaskClick}
+            onDeleteTask={deleteTask}
+          />
+        </div>
+      </div>
 
       <TaskDrawer
         task={selectedTask}
