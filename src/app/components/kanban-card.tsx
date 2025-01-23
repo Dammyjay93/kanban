@@ -106,8 +106,7 @@ export default function KanbanCard({
         KhtmlUserSelect: 'none',
         MozUserSelect: 'none',
         msUserSelect: 'none',
-        userSelect: 'none',
-        touchAction: 'none'
+        userSelect: 'none'
       } as React.CSSProperties}
       className="relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
         border border-[#070708]/[0.06]
@@ -120,7 +119,7 @@ export default function KanbanCard({
         hover:bg-[#F9F9FA]
         active:translate-y-[0.5px]
         active:cursor-grabbing
-        select-none touch-none
+        select-none
         [user-select:none]
         [-webkit-user-select:none]
         [-webkit-touch-callout:none]"
