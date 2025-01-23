@@ -168,7 +168,7 @@ export default function KanbanColumn({
                 )}
                 <div 
                   className={`kanban-card w-full transition-all duration-200 ${
-                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !rounded-[12px] !border-gray-500 relative after:absolute after:inset-0 after:bg-[#DEDEDE] after:rounded-[12px] after:pointer-events-none' : ''
+                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !border-gray-500 overflow-hidden' : ''
                   }`}
                   style={{
                     willChange: isDragOver ? 'transform' : 'auto'
@@ -181,6 +181,14 @@ export default function KanbanColumn({
                   }}
                   onDragEnd={() => setDraggedTask(null)}
                 >
+                  <style jsx>{`
+                    @media (hover: none) and (pointer: coarse) {
+                      .kanban-card:hover {
+                        transform: none !important;
+                        box-shadow: none !important;
+                      }
+                    }
+                  `}</style>
                   <KanbanCard
                     id={task.id}
                     index={index}
