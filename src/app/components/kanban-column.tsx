@@ -40,25 +40,25 @@ const getColumnStyle = (status: string) => {
     case 'todo':
       return {
         indicator: 'bg-blue-500',
-        count: 'bg-blue-50 text-blue-700',
+        count: 'bg-surface-primary border border-border-light text-text-primary shadow-sm',
         border: 'border-blue-500'
       };
     case 'inProgress':
       return {
         indicator: 'bg-yellow-500',
-        count: 'bg-yellow-50 text-yellow-700',
+        count: 'bg-surface-primary border border-border-light text-text-primary shadow-sm',
         border: 'border-yellow-500'
       };
     case 'done':
       return {
         indicator: 'bg-green-500',
-        count: 'bg-green-50 text-green-700',
+        count: 'bg-surface-primary border border-border-light text-text-primary shadow-sm',
         border: 'border-green-500'
       };
     default:
       return {
         indicator: 'bg-gray-500',
-        count: 'bg-gray-50 text-gray-700',
+        count: 'bg-surface-primary border border-border-light text-text-primary shadow-sm',
         border: 'border-gray-500'
       };
   }
@@ -113,8 +113,8 @@ export default function KanbanColumn({
 
   return (
     <div
-      className={`w-full bg-[#F1F1F1] rounded-[16px] shadow-sm flex flex-col h-fit ${
-        isDragOver ? `border ${styles.border}` : 'border border-[#EBEBEB]'
+      className={`w-full bg-[var(--column-bg)] rounded-[16px] shadow-sm flex flex-col h-fit ${
+        isDragOver ? `border ${styles.border}` : 'border border-border-subtle'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={() => {
@@ -142,11 +142,11 @@ export default function KanbanColumn({
       <div className="shrink-0 px-3 pt-3 pb-1">
         <div className="flex items-center gap-2">
           <div className={`w-1 h-5 ${styles.indicator} rounded-full`} />
-          <h2 className="text-base font-medium text-gray-900">{title}</h2>
+          <h2 className="text-base font-medium text-text-primary">{title}</h2>
           <div className={`px-2 py-0.5 rounded-full ${styles.count} text-xs font-medium`}>
             {tasks.length}
           </div>
-          <button className="ml-auto text-gray-400 hover:text-gray-600">
+          <button className="ml-auto text-text-tertiary hover:text-text-secondary">
             <DotsThree weight="bold" className="w-5 h-5" />
           </button>
         </div>
@@ -177,7 +177,7 @@ export default function KanbanColumn({
                 )}
                 <div 
                   className={`kanban-card w-full transition-all duration-200 ${
-                    isDragging ? 'opacity-40 !bg-gray-50 !border !border-dashed !rounded-[12px] !border-gray-500 relative after:absolute after:inset-0 after:bg-[#DEDEDE] after:rounded-[12px] after:pointer-events-none' : ''
+                    isDragging ? 'opacity-40 !bg-surface-secondary !border !border-dashed !rounded-[12px] !border-border-light relative after:absolute after:inset-0 after:bg-border-subtle after:rounded-[12px] after:pointer-events-none' : ''
                   }`}
                   style={{
                     willChange: isDragOver ? 'transform' : 'auto'
@@ -220,7 +220,7 @@ export default function KanbanColumn({
           )}
           <button
             onClick={() => onAddCard(status)}
-            className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 bg-transparent hover:bg-white rounded-[12px] transition-all duration-480"
+            className="w-full py-2 px-3 flex items-center justify-center gap-2 text-sm text-text-secondary hover:text-text-primary bg-transparent hover:bg-[var(--card-hover-bg)] border border-transparent hover:border-[var(--card-hover-border)] rounded-[12px] transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             <span>Add task</span>

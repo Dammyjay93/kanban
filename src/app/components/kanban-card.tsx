@@ -28,13 +28,13 @@ interface KanbanCardProps {
 const getPriorityStyle = (priority: string) => {
   switch (priority) {
     case 'Low':
-      return 'bg-blue-50 text-blue-700';
+      return 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20 dark:text-blue-400';
     case 'Medium':
-      return 'bg-yellow-50 text-yellow-700';
+      return 'bg-yellow-500/10 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400';
     case 'High':
-      return 'bg-red-50 text-red-700';
+      return 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400';
     default:
-      return 'bg-gray-50 text-gray-700';
+      return 'bg-surface-secondary text-text-primary';
   }
 };
 
@@ -113,12 +113,13 @@ export default function KanbanCard({
         msUserSelect: 'none',
         userSelect: 'none'
       } as React.CSSProperties}
-      className={`relative bg-white p-3 rounded-[12px] cursor-grab transition-all duration-200
-        border border-[#070708]/[0.09]
+      className={`relative bg-[var(--card-bg)] p-3 rounded-[12px] cursor-grab transition-all duration-200
+        border border-[var(--card-border)]
+        shadow-[var(--card-shadow)]
         
-        [@media(hover:hover)]:hover:bg-[#F9F9FA]
-        [@media(hover:hover)]:hover:border-[#070708]/[0.12]
-        [@media(hover:hover)]:hover:shadow-sm
+        [@media(hover:hover)]:hover:bg-[var(--card-hover-bg)]
+        [@media(hover:hover)]:hover:border-[var(--card-hover-border)]
+        [@media(hover:hover)]:hover:shadow-none
         
         active:cursor-grabbing
         select-none
@@ -137,19 +138,19 @@ export default function KanbanCard({
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-text-tertiary hover:text-text-secondary"
           >
             <TbDots className="w-4 h-4" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10">
+            <div className="absolute right-0 mt-1 w-36 bg-surface-primary rounded-lg shadow-lg border border-border-subtle py-1 z-10">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Handle edit action
+                  onClick();
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 select-none"
+                className="w-full px-4 py-2 text-sm text-left text-text-secondary hover:bg-surface-secondary select-none"
               >
                 Edit
               </button>
@@ -159,7 +160,7 @@ export default function KanbanCard({
                   onDelete(id);
                   setShowMenu(false);
                 }}
-                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50 select-none"
+                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-surface-secondary select-none"
               >
                 Delete
               </button>
@@ -168,8 +169,8 @@ export default function KanbanCard({
         </div>
       </div>
 
-      <h3 className="text-sm font-medium text-gray-900 mb-1 select-none">{title}</h3>
-      <p className="text-sm text-gray-500 mb-3 line-clamp-2 select-none">{description}</p>
+      <h3 className="text-sm font-medium text-text-primary mb-1 select-none">{title}</h3>
+      <p className="text-sm text-text-secondary mb-3 line-clamp-2 select-none">{description}</p>
 
       <div className="flex items-center justify-between">
         <div className="flex -space-x-2">
@@ -180,12 +181,12 @@ export default function KanbanCard({
               alt={`Assignee ${index + 1}`}
               width={24}
               height={24}
-              className="rounded-full border-2 border-white"
+              className="rounded-full border-2 border-surface-primary"
             />
           ))}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex items-center gap-3 text-xs text-text-tertiary">
           {dueDate && (
             <div className="flex items-center gap-1">
               <TbCalendarClock className="w-3.5 h-3.5" />

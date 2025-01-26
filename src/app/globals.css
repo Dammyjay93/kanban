@@ -3,15 +3,74 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  /* Base colors derived from existing styles */
+  --background: #FFFFFF;
   --foreground: #171717;
+  --pattern-bg: #F6F6F7;
+  --pattern-dot: #CDD0DB;
+  
+  /* Surface colors */
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F6F6F7;
+  --surface-overlay: color-mix(in srgb, #FFFFFF 80%, transparent);
+  
+  /* Text colors derived from existing */
+  --text-primary: #171717;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  
+  /* Border colors */
+  --border-light: color-mix(in srgb, #18181B 10%, transparent);
+  --border-subtle: #E5E7EB;
+  
+  /* Interactive states */
+  --hover-light: color-mix(in srgb, #18181B 6%, transparent);
+  --hover-subtle: color-mix(in srgb, #18181B 4%, transparent);
+
+  /* Card styles */
+  --card-border: var(--border-subtle);
+  --card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --card-bg: var(--surface-primary);
+  --card-hover-border: var(--border-subtle);
+  --card-hover-bg: color-mix(in srgb, var(--surface-secondary) 50%, var(--surface-primary));
+
+  /* Column styles */
+  --column-bg: #F6F6F7;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root.dark {
+  --background: #191919;
+  --foreground: #252525;
+  --pattern-bg: #191919;
+  --pattern-dot: #252525;
+  
+  /* Surface colors */
+  --surface-primary: #191919;
+  --surface-secondary: #252525;
+  --surface-overlay: color-mix(in srgb, #252525 80%, transparent);
+  
+  /* Text colors */
+  --text-primary: #D6D6D6;
+  --text-secondary: #B8B8B6;
+  --text-tertiary: #868583;
+  
+  /* Border colors */
+  --border-light: color-mix(in srgb, #FFFFFF 10%, transparent);
+  --border-subtle: #303030;
+  
+  /* Interactive states */
+  --hover-light: color-mix(in srgb, #FFFFFF 6%, transparent);
+  --hover-subtle: color-mix(in srgb, #FFFFFF 4%, transparent);
+
+  /* Card styles */
+  --card-border: var(--border-subtle);
+  --card-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
+  --card-bg: var(--surface-secondary);
+  --card-hover-border: var(--border-light);
+  --card-hover-bg: color-mix(in srgb, var(--surface-primary) 15%, var(--surface-secondary));
+
+  /* Column styles */
+  --column-bg: #1E1E1E;
 }
 
 body {
@@ -101,7 +160,7 @@ body {
 }
 
 .fixed-pattern {
-  background-image: radial-gradient(#CDD0DB 1px, #F6F6F7 1px);
+  background-image: radial-gradient(var(--pattern-dot) 1px, var(--pattern-bg) 1px);
   background-size: 20px 20px;
   background-attachment: fixed;
   background-position: center;

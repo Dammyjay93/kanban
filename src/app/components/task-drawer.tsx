@@ -9,19 +9,48 @@ import {
   TextAlignLeft, 
   CaretDown,
   Plus,
-  Trash
+  Trash,
+  ListChecks,
+  ChatCircle
 } from '@phosphor-icons/react';
 import { TbCalendarClock, TbFlag3, TbProgressCheck, TbShare, TbUser, TbCheckbox, TbMessage2, TbActivity, TbX, TbCheck } from 'react-icons/tb';
 import { MdModeEdit } from "react-icons/md";
 import PillSwitcher from './pill-switcher';
-import { Task, Activity } from '../types';
+import { Task } from '../types';
 
 type TabType = 'subtasks' | 'comments' | 'activities';
 
-interface TaskDrawerProps {
-  task: Task | null;
-  onClose: () => void;
-  onUpdate: (updatedTask: Task) => void;
+interface Comment {
+  id: string;
+  text: string;
+  userId: string;
+  timestamp: string;
+}
+
+interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+interface Activity {
+  id: string;
+  type: 'status_change' | 'priority_change' | 'assignee_change' | 'comment_added';
+  message: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  details?: {
+    oldStatus?: Task['status'];
+    newStatus?: Task['status'];
+    comment?: string;
+  };
+}
+
+interface ExtendedTask extends Omit<Task, 'subtasks' | 'activities' | 'comments'> {
+  subtasks: Subtask[];
+  activities: Activity[];
+  comments?: Comment[];
 }
 
 const getStatusColor = (status: string) => {
@@ -56,7 +85,7 @@ const StatusTag = ({ status }: { status: Task['status'] }) => (
   </span>
 );
 
-export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps) {
+export default function TaskDrawer({ task, onClose, onUpdate }: { task: ExtendedTask | null; onClose: () => void; onUpdate: (task: ExtendedTask) => void }) {
   const [activeTab, setActiveTab] = useState<TabType>('subtasks');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(task?.title || '');
@@ -65,6 +94,11 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isEditingSubtask, setIsEditingSubtask] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [newComment, setNewComment] = useState('');
 
   const tabOptions = [
     { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox, mobileLabel: '' },
@@ -92,7 +126,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
 
   const handleTitleSubmit = () => {
     if (!task) return;
-    const updatedTask: Task = {
+    const updatedTask: ExtendedTask = {
       ...task,
       title
     };
@@ -118,16 +152,16 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
 
   const handleDescriptionSubmit = () => {
     if (!task) return;
-    const updatedTask: Task = {
+    const updatedTask: ExtendedTask = {
       ...task,
       description
     };
     onUpdate(updatedTask);
   };
 
-  const handleChange = (field: keyof Task, value: Task[keyof Task]) => {
+  const handleChange = (field: keyof ExtendedTask, value: any) => {
     if (!task) return;
-    const updatedTask: Task = {
+    const updatedTask = {
       ...task,
       [field]: value
     };
@@ -139,7 +173,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     const updatedSubtasks = task.subtasks?.map(st =>
       st.id === subtaskId ? { ...st, title: editText } : st
     );
-    const updatedTask: Task = {
+    const updatedTask: ExtendedTask = {
       ...task,
       subtasks: updatedSubtasks
     };
@@ -166,93 +200,179 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
     }
   };
 
+  const handleSubtaskToggle = (subtaskId: string) => {
+    if (!task) return;
+    const updatedSubtasks = task.subtasks?.map((st: Subtask) =>
+      st.id === subtaskId ? { ...st, completed: !st.completed } : st
+    ).sort((a: Subtask, b: Subtask) => {
+      if (a.completed === b.completed) return 0;
+      return a.completed ? 1 : -1;
+    });
+    handleChange('subtasks', updatedSubtasks);
+  };
+
+  const handleSubtaskEditSubmit = () => {
+    if (!task) return;
+    const updatedSubtasks = task.subtasks?.map((st: Subtask) =>
+      st.id === isEditingSubtask ? { ...st, title: editingSubtaskTitle } : st
+    );
+    const updatedTask: ExtendedTask = {
+      ...task,
+      subtasks: updatedSubtasks
+    };
+    onUpdate(updatedTask);
+    setIsEditingSubtask(null);
+  };
+
+  const handleSubtaskEditCancel = () => {
+    setIsEditingSubtask(null);
+  };
+
+  const handleSubtaskEditDelete = (subtaskId: string) => {
+    if (!task) return;
+    const updatedSubtasks = task.subtasks?.filter((st: Subtask) => st.id !== subtaskId);
+    handleChange('subtasks', updatedSubtasks);
+  };
+
+  const handleSubtaskAdd = () => {
+    if (!task) return;
+    const newSubtask: Subtask = {
+      id: Date.now().toString(),
+      title: newSubtaskTitle,
+      completed: false
+    };
+    handleChange('subtasks', [...(task.subtasks || []), newSubtask]);
+    setIsAddingSubtask(false);
+    setNewSubtaskTitle('');
+  };
+
+  const handleCommentAdd = () => {
+    if (!task || !newComment.trim()) return;
+    const newCommentObj: Comment = {
+      id: Date.now().toString(),
+      userId: 'CT',
+      text: newComment,
+      timestamp: new Date().toISOString()
+    };
+    const updatedComments = [...(task.comments || []), newCommentObj];
+    handleChange('comments', updatedComments);
+    setNewComment('');
+  };
+
   const renderTabContent = () => {
     if (!task) return null;
+    
     switch (activeTab) {
       case 'subtasks':
-        const subtasks = task.subtasks || [];
-        const completedSubtasks = subtasks.filter(subtask => subtask.completed).length;
-        const totalSubtasks = subtasks.length;
-        
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <TbCheckbox className="w-4 h-4 text-gray-400" />
-              <h3 className="text-sm font-medium text-gray-900">Subtasks</h3>
-              <div className="bg-gray-50 text-gray-700 text-xs font-medium px-2 py-1 rounded">
-                {completedSubtasks}/{totalSubtasks}
-              </div>
+              <ListChecks className="w-4 h-4 text-text-tertiary" />
+              <h3 className="text-sm font-medium text-text-primary">Subtasks</h3>
             </div>
+
             <div className="space-y-2">
-              {subtasks.length === 0 ? (
-                <p className="text-sm text-gray-500">No subtasks yet</p>
-              ) : (
-                subtasks.map(subtask => (
-                  <div key={subtask.id} className="flex items-center gap-2 group">
-                    <input
-                      type="checkbox"
-                      checked={subtask.completed}
-                      onChange={() => {
-                        const updatedSubtasks = task.subtasks?.map(st =>
-                          st.id === subtask.id ? { ...st, completed: !st.completed } : st
-                        ).sort((a, b) => {
-                          if (a.completed === b.completed) return 0;
-                          return a.completed ? 1 : -1;
-                        });
-                        handleChange('subtasks', updatedSubtasks);
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    {editingId === subtask.id ? (
+              {task.subtasks?.map((subtask) => (
+                <div key={subtask.id} className="flex items-start gap-2 group">
+                  <input
+                    type="checkbox"
+                    checked={subtask.completed}
+                    onChange={() => handleSubtaskToggle(subtask.id)}
+                    className="mt-1 border-border-subtle rounded text-primary focus:ring-primary"
+                  />
+                  {isEditingSubtask === subtask.id ? (
+                    <div className="flex-1 flex items-center gap-2">
                       <input
                         type="text"
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onBlur={() => handleEditSubmit(subtask.id)}
+                        value={editingSubtaskTitle}
+                        onChange={(e) => setEditingSubtaskTitle(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleEditSubmit(subtask.id);
-                          if (e.key === 'Escape') setEditingId(null);
+                          if (e.key === 'Enter') handleSubtaskEditSubmit();
+                          if (e.key === 'Escape') handleSubtaskEditCancel();
                         }}
-                        className="flex-1 text-sm text-gray-700 bg-transparent border-0 p-0 focus:outline-none focus:ring-0"
+                        className="flex-1 text-sm text-text-primary bg-transparent border border-border-light rounded-lg px-3 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
                         autoFocus
                       />
-                    ) : (
-                      <span 
-                        onClick={() => {
-                          setEditingId(subtask.id);
-                          setEditText(subtask.title);
-                        }}
-                        className={`text-sm text-gray-700 flex-1 cursor-text hover:text-gray-900 ${subtask.completed ? 'line-through text-gray-400' : ''}`}
-                      >
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={handleSubtaskEditCancel}
+                          className="p-1 rounded-md bg-hover-light"
+                        >
+                          <TbX className="w-3.5 h-3.5 text-text-secondary" />
+                        </button>
+                        <button
+                          onClick={handleSubtaskEditSubmit}
+                          className="p-1 rounded-md bg-hover-light"
+                        >
+                          <TbCheck className="w-3.5 h-3.5 text-text-secondary" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-start justify-between group">
+                      <span className={`text-sm ${subtask.completed ? 'text-text-tertiary line-through' : 'text-text-primary'}`}>
                         {subtask.title}
                       </span>
-                    )}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                        <button
+                          onClick={() => {
+                            setIsEditingSubtask(subtask.id);
+                            setEditingSubtaskTitle(subtask.title);
+                          }}
+                          className="p-1 rounded-md hover:bg-hover-light text-text-tertiary hover:text-text-secondary"
+                        >
+                          <MdModeEdit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleSubtaskEditDelete(subtask.id)}
+                          className="p-1 rounded-md hover:bg-hover-light text-text-tertiary hover:text-text-secondary"
+                        >
+                          <Trash className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {isAddingSubtask ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newSubtaskTitle}
+                    onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSubtaskAdd();
+                      if (e.key === 'Escape') setIsAddingSubtask(false);
+                    }}
+                    className="flex-1 text-sm text-text-primary bg-transparent border border-border-light rounded-lg px-3 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Add a subtask..."
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => {
-                        const updatedSubtasks = task.subtasks?.filter(st => st.id !== subtask.id);
-                        handleChange('subtasks', updatedSubtasks);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setIsAddingSubtask(false)}
+                      className="p-1 rounded-md bg-hover-light"
                     >
-                      <Trash className="w-4 h-4" />
+                      <TbX className="w-3.5 h-3.5 text-text-secondary" />
+                    </button>
+                    <button
+                      onClick={handleSubtaskAdd}
+                      className="p-1 rounded-md bg-hover-light"
+                    >
+                      <TbCheck className="w-3.5 h-3.5 text-text-secondary" />
                     </button>
                   </div>
-                ))
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAddingSubtask(true)}
+                  className="flex items-center gap-2 text-sm text-text-tertiary hover:text-text-secondary"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add subtask</span>
+                </button>
               )}
-              <button
-                onClick={() => {
-                  const newSubtask = {
-                    id: Date.now().toString(),
-                    title: 'New subtask',
-                    completed: false
-                  };
-                  handleChange('subtasks', [...(task.subtasks || []), newSubtask]);
-                }}
-                className="w-full py-2 px-3 flex text-sm items-center justify-center gap-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-150"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add new</span>
-              </button>
             </div>
           </div>
         );
@@ -260,11 +380,45 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <TbMessage2 className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Comments</span>
+              <ChatCircle className="w-4 h-4 text-text-tertiary" />
+              <h3 className="text-sm font-medium text-text-primary">Comments</h3>
             </div>
-            <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Comments functionality coming soon...</p>
+
+            <div className="space-y-4">
+              {task.comments?.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
+                    <span className="text-sm font-medium text-text-primary">CT</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-text-primary">Calum Tyler</span>
+                      <span className="text-xs text-text-tertiary">{comment.timestamp}</span>
+                    </div>
+                    <p className="text-sm text-text-secondary">{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
+                  <span className="text-sm font-medium text-text-primary">CT</span>
+                </div>
+                <div className="flex-1">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleCommentAdd();
+                      }
+                    }}
+                    placeholder="Write a comment..."
+                    className="w-full min-h-[80px] text-sm text-text-secondary bg-transparent border border-border-subtle rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -272,39 +426,32 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <TbActivity className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Activities</span>
+              <Clock className="w-4 h-4 text-text-tertiary" />
+              <h3 className="text-sm font-medium text-text-primary">Activity</h3>
             </div>
+
             <div className="space-y-4">
-              {!task.activities?.length ? (
-                <p className="text-sm text-gray-500">No activities yet</p>
-              ) : (
-                task.activities?.map(activity => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-600">
-                      {activity.userId}
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{activity.userName}</span>{' '}
-                        {activity.type === 'status_change' && activity.details ? (
-                          <>
-                            Changed status from{' '}
-                            <StatusTag status={activity.details.oldStatus!} />{' '}
-                            to{' '}
-                            <StatusTag status={activity.details.newStatus!} />
-                          </>
-                        ) : (
-                          activity.message
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
+              {task.activities?.map((activity) => (
+                <div key={activity.id} className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
+                    <span className="text-sm font-medium text-text-primary">
+                      {activity.userName.split(' ').map((n: string) => n[0]).join('')}
+                    </span>
                   </div>
-                ))
-              )}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-text-primary">{activity.userName}</span>
+                      <span className="text-xs text-text-tertiary">{activity.timestamp}</span>
+                    </div>
+                    <p className="text-sm text-text-secondary">
+                      {activity.type === 'status_change' && activity.details && (
+                        <>Changed status from {activity.details.oldStatus} to {activity.details.newStatus}</>
+                      )}
+                      {activity.type === 'comment_added' && activity.message}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -368,30 +515,30 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
             onDragEnd={isMobile ? onDragEnd : undefined}
             className={
               isMobile 
-                ? 'fixed left-2 right-2 bottom-2 bg-white shadow-lg z-50 flex flex-col rounded-2xl overflow-hidden h-[75vh]'
-                : 'fixed right-4 top-4 bottom-4 h-auto w-[440px] rounded-[24px] bg-white shadow-lg z-50 flex flex-col'
+                ? 'fixed left-2 right-2 bottom-2 bg-surface-primary shadow-lg z-50 flex flex-col rounded-[24px] overflow-hidden h-[75vh]'
+                : 'fixed right-4 top-4 bottom-4 h-auto w-[440px] rounded-[24px] bg-surface-primary shadow-lg z-50 flex flex-col overflow-hidden'
             }
           >
             {isMobile && (
               <div className="w-full flex justify-center pt-2 pb-1">
-                <div className="w-8 h-1 rounded-full bg-gray-300" />
+                <div className="w-8 h-1 rounded-full bg-surface-secondary" />
               </div>
             )}
             
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
+            <div className="sticky top-0 bg-surface-overlay backdrop-blur-md border-b border-border-subtle z-10 rounded-t-[24px]">
+              <div className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <button onClick={onClose} className="text-gray-500 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                  <button onClick={onClose} className="text-text-tertiary hover:text-text-secondary p-1 rounded hover:bg-hover-light">
                     <X weight="bold" className="w-4 h-4" />
                   </button>
-                  <h2 className="text-base font-medium text-gray-900">Task Details</h2>
+                  <h2 className="text-base font-medium text-text-primary">Task Details</h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleShare} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                  <button onClick={handleShare} className="text-text-tertiary hover:text-text-secondary p-1 rounded hover:bg-hover-light">
                     <TbShare className="w-4 h-4" />
                   </button>
-                  <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-50">
+                  <button className="text-text-tertiary hover:text-text-secondary p-1 rounded hover:bg-hover-light">
                     <DotsThree weight="bold" className="w-5 h-5" />
                   </button>
                 </div>
@@ -407,7 +554,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   setOriginalTitle(title);
                 }}>
                   {isEditingTitle ? (
-                    <div className="w-fit max-w-full flex items-center gap-2 border border-[#18181B]/10 rounded-[10px]">
+                    <div className="w-fit max-w-full flex items-center gap-2 border border-border-light rounded-[10px]">
                       <input
                         ref={inputRef}
                         type="text"
@@ -415,33 +562,33 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                         onChange={(e) => setTitle(e.target.value)}
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xl font-medium text-gray-900 bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
+                        className="text-xl font-medium text-text-primary bg-transparent outline-none min-w-[1px] w-auto px-3 py-1"
                         size={title.length}
                       />
                       <div className="flex items-center gap-1 pr-2 shrink-0">
                         <button 
                           onClick={handleTitleCancel}
                           type="button"
-                          className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                          className="p-1 rounded-md bg-hover-light"
                         >
-                          <TbX className="w-3.5 h-3.5 text-gray-700" />
+                          <TbX className="w-3.5 h-3.5 text-text-secondary" />
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleTitleSubmit();
                           }}
-                          type="button"
-                          className="p-1 rounded-md bg-[#18181B]/[0.06]"
+                          type="button" 
+                          className="p-1 rounded-md bg-hover-light"
                         >
-                          <TbCheck className="w-3.5 h-3.5 text-gray-700" />
+                          <TbCheck className="w-3.5 h-3.5 text-text-secondary" />
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="w-fit max-w-full flex items-center gap-2">
-                      <h1 className="text-xl font-medium text-gray-900 break-words">{title}</h1>
-                      <div className="text-gray-400 hover:text-gray-900 group-hover:text-gray-900 hover:bg-[#18181B]/[0.04] group-hover:bg-[#18181B]/[0.04] rounded-lg p-1 -m-1 shrink-0">
+                      <h1 className="text-xl font-medium text-text-primary break-words">{title}</h1>
+                      <div className="text-text-tertiary hover:text-text-secondary group-hover:opacity-100 opacity-0 transition-opacity">
                         <MdModeEdit className="w-4 h-4" />
                       </div>
                     </div>
@@ -453,17 +600,17 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   {/* Created Time */}
                   <div className="flex items-center">
                     <div className="flex items-center gap-2 w-[180px] shrink-0">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-regular text-gray-900">Created time</span>
+                      <Clock className="w-4 h-4 text-text-tertiary" />
+                      <span className="text-sm font-regular text-text-primary">Created time</span>
                     </div>
-                    <span className="text-sm text-gray-500">{task.createdAt}</span>
+                    <span className="text-sm text-text-secondary">{task.createdAt}</span>
                   </div>
 
                   {/* Status */}
                   <div className="flex items-center">
                     <div className="flex items-center gap-2 w-[180px] shrink-0">
-                      <TbProgressCheck className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-regular text-gray-900">Status</span>
+                      <TbProgressCheck className="w-4 h-4 text-text-tertiary" />
+                      <span className="text-sm font-regular text-text-primary">Status</span>
                     </div>
                     <div className="relative inline-block">
                       <select
@@ -483,17 +630,15 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                             }
                           };
                           
-                          // Update task status and add activity
                           const updatedTask = {
                             ...task,
                             status: newStatus,
                             activities: [...(task.activities || []), newActivity]
                           };
                           
-                          // Update the task which will trigger board rerender
                           onUpdate(updatedTask);
                         }}
-                        className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-gray-900 [&>_option]:pl-2.5`}
+                        className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-sm font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-text-primary [&>_option]:pl-2.5`}
                       >
                         <option value="todo">To Do</option>
                         <option value="inProgress">In Progress</option>
@@ -509,21 +654,21 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   {/* Priority */}
                   <div className="flex items-center">
                     <div className="flex items-center gap-2 w-[180px] shrink-0">
-                      <TbFlag3 className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-regular text-gray-900">Priority</span>
+                      <TbFlag3 className="w-4 h-4 text-text-tertiary" />
+                      <span className="text-sm font-regular text-text-primary">Priority</span>
                     </div>
                     <div className="relative inline-block">
                       <select
                         value={task.priority}
                         onChange={(e) => handleChange('priority', e.target.value)}
-                        className="w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none bg-gray-100 text-gray-800 [&>_option]:text-gray-900 [&>_option]:pl-2.5"
+                        className="w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-sm font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none bg-surface-secondary text-text-primary [&>_option]:text-text-primary [&>_option]:pl-2.5"
                       >
                         <option value="Low">Low</option>
                         <option value="Medium">Medium</option>
                         <option value="High">High</option>
                       </select>
                       <CaretDown 
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-gray-800"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-text-secondary"
                         weight="bold"
                       />
                     </div>
@@ -532,15 +677,15 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   {/* Due Date */}
                   <div className="flex items-center">
                     <div className="flex items-center gap-2 w-[180px] shrink-0">
-                      <TbCalendarClock className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-regular text-gray-900">Due Date</span>
+                      <TbCalendarClock className="w-4 h-4 text-text-tertiary" />
+                      <span className="text-sm font-regular text-text-primary">Due Date</span>
                     </div>
                     <div className="relative inline-block">
                       <input
                         type="date"
                         value={task.dueDate || ''}
                         onChange={(e) => handleChange('dueDate', e.target.value)}
-                        className="text-sm text-gray-500 appearance-none bg-gray-100 rounded-full px-2.5 py-1 cursor-pointer hover:text-blue-600 focus:ring-0 focus:outline-none min-w-[130px]"
+                        className="text-sm text-text-primary appearance-none bg-surface-secondary rounded-full px-2.5 py-1 cursor-pointer focus:ring-0 focus:outline-none min-w-[130px] border border-border-light hover:border-border-subtle transition-colors [&::-webkit-calendar-picker-indicator]:text-text-primary [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer dark:[&::-webkit-calendar-picker-indicator]:invert"
                       />
                       <button
                         onClick={(e) => {
@@ -557,41 +702,39 @@ export default function TaskDrawer({ task, onClose, onUpdate }: TaskDrawerProps)
                   {/* Assignees */}
                   <div className="flex items-center">
                     <div className="flex items-center gap-2 w-[180px] shrink-0">
-                      <TbUser className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-regular text-gray-900">Assignees</span>
+                      <TbUser className="w-4 h-4 text-text-tertiary" />
+                      <span className="text-sm font-regular text-text-primary">Assignees</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Coming Soon</span>
+                      <span className="text-sm font-medium bg-surface-secondary text-text-primary px-2.5 py-1.5 rounded-full">Coming Soon</span>
                     </div>
                   </div>
                 </div>
 
-                
-
                 {/* Description */}
                 <div className="space-y-2 mb-2">
                   <div className="flex items-center gap-2">
-                    <TextAlignLeft className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm font-regular text-gray-900">Description</span>
+                    <TextAlignLeft className="w-4 h-4 text-text-tertiary" />
+                    <span className="text-sm font-regular text-text-primary">Description</span>
                   </div>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     onBlur={handleDescriptionSubmit}
                     rows={4}
-                    className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm text-text-secondary bg-transparent border border-border-subtle rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="Add a more detailed description..."
                   />
                 </div>
 
                 {/* Tabs */}
-                <div className="w-fit">
+                <div className={`${isMobile ? 'w-fit' : 'w-full'}`}>
                   <PillSwitcher
                     options={tabOptions}
                     activeId={activeTab}
                     onChange={(id) => setActiveTab(id as TabType)}
                     fontWeight="regular"
-                    fullWidth={false}
+                    fullWidth={!isMobile}
                   />
                 </div>
 

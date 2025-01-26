@@ -45,11 +45,11 @@ export default function PillSwitcher({ options, activeId, onChange, fontWeight =
   };
 
   return (
-    <div className={`${fullWidth ? 'flex w-full' : 'inline-flex w-fit'} rounded-[12px] bg-white outline outline-1 outline-gray-100 shadow-sm p-1.5 relative`}>
+    <div className={`${fullWidth ? 'flex w-full' : 'inline-flex w-fit'} rounded-[16px] bg-surface-primary outline outline-1 outline-border-subtle shadow-sm px-1 py-1 relative`}>
       <motion.div 
         layout
         transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
-        className="absolute rounded-[12px] bg-[#F9F9FA] border border-[#070708]/[0.06] shadow-[0_17px_5px_rgba(7,7,8,0.00),0_11px_4px_rgba(7,7,8,0.01),0_6px_4px_rgba(7,7,8,0.02),0_3px_3px_rgba(7,7,8,0.04),0_1px_1px_rgba(7,7,8,0.05)] [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.20)]"
+        className="absolute rounded-[12px] bg-surface-secondary border border-border-light shadow-[0_17px_5px_rgba(7,7,8,0.00),0_11px_4px_rgba(7,7,8,0.01),0_6px_4px_rgba(7,7,8,0.02),0_3px_3px_rgba(7,7,8,0.04),0_1px_1px_rgba(7,7,8,0.05)] [box-shadow:inset_0_-2px_0_rgba(7,7,8,0.20)]"
         style={{
           width: activeStyles.width,
           height: 'calc(100% - 8px)',
@@ -80,11 +80,11 @@ export default function PillSwitcher({ options, activeId, onChange, fontWeight =
               ? [
                   'relative',
                   'before:absolute before:inset-0 before:rounded-[12px] before:-z-10',
-                  'before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_white_0%,_transparent_50%)]',
+                  'before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_var(--surface-primary)_0%,_transparent_50%)]',
                   'before:transition-[background-position] before:duration-300',
-                  'text-gray-900 z-10'
+                  'text-text-primary z-10'
                 ].join(' ')
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           {Icon && <Icon className="w-4 h-4" />}
