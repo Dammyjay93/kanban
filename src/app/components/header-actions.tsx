@@ -1,69 +1,89 @@
 'use client';
 
-import { TbShare, TbMoon, TbSun } from "react-icons/tb";
+import { TbShare, TbMoon, TbSun, TbDeviceDesktop } from "react-icons/tb";
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from '../providers/theme-provider';
+import { motion } from 'framer-motion';
+import type { Theme } from '../providers/theme-provider';
 
 interface HeaderActionsProps {
   onShare: () => void;
 }
 
+const baseThemeIcons: { id: Theme; icon: typeof TbSun }[] = [
+  { id: 'system', icon: TbDeviceDesktop },
+  { id: 'light', icon: TbSun },
+  { id: 'dark', icon: TbMoon },
+];
+
+const tweenConfig = {
+  type: 'tween',
+  duration: 0.1,
+  ease: [0.33, 1, 0.68, 1]  // Custom easing curve for smooth acceleration and deceleration
+};
+
 export default function HeaderActions({ onShare }: HeaderActionsProps) {
   const { theme, toggleTheme } = useTheme();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
-    setMousePosition({
-      x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * 100,
-    });
+  const handleThemeSelect = (selectedTheme: Theme) => {
+    if (selectedTheme === theme) return;
+    toggleTheme();
   };
+
+  // Reorder icons to put current theme last
+  const themeIcons = [
+    ...baseThemeIcons.filter(t => t.id !== theme),
+    baseThemeIcons.find(t => t.id === theme)!
+  ];
 
   return (
     <div className="flex items-center gap-2">
       <div className="inline-flex items-center gap-1">
-        <button
-          onClick={toggleTheme}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setMousePosition({ x: 50, y: 50 })}
-          style={{
-            '--mouse-x': `${mousePosition.x}%`,
-            '--mouse-y': `${mousePosition.y}%`,
-          } as React.CSSProperties}
-          className={`flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-all duration-200 relative text-text-secondary hover:text-text-primary group ${[
-            'hover:bg-surface-secondary',
-            'before:absolute before:inset-0 before:rounded-[12px] before:-z-10',
-            'before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_var(--surface-primary)_0%,_transparent_50%)]',
-            'before:opacity-0 group-hover:before:opacity-100',
-            'before:transition-all before:duration-200',
-            'hover:shadow-[inset_0_-2px_0_var(--border-light),0_1px_3px_0_var(--border-light)] dark:hover:shadow-[inset_0_-2px_0_var(--border-light),0_2px_4px_rgba(255,255,255,0.05)]',
-            'border border-transparent hover:border-border-light',
-            'transition-all duration-200'
-          ].join(' ')}`}
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsExpanded(true)}
+          onMouseLeave={() => setIsExpanded(false)}
         >
-          {theme === 'light' ? <TbSun className="w-4 h-4" /> : <TbMoon className="w-4 h-4" />}
-        </button>
+          <motion.div
+            animate={{
+              width: isExpanded ? 'auto' : 40,
+              backgroundColor: isExpanded ? 'var(--surface-primary)' : 'transparent',
+              borderColor: isExpanded ? 'var(--border-subtle)' : 'transparent'
+            }}
+            transition={tweenConfig}
+            className="flex items-center justify-end gap-1 border rounded-[16px] p-1 overflow-hidden"
+          >
+            {themeIcons.map(({ id, icon: Icon }) => {
+              const isSelected = theme === id;
+              const isLast = id === theme;
+              return (
+                <motion.button
+                  key={id}
+                  animate={{ 
+                    opacity: isExpanded || isLast ? 1 : 0,
+                    scale: isExpanded || isLast ? 1 : 1
+                  }}
+                  transition={tweenConfig}
+                  onClick={() => handleThemeSelect(id)}
+                  className={`flex items-center justify-center w-8 h-8 rounded-[10px] ${
+                    isSelected && isExpanded
+                      ? 'bg-surface-secondary text-text-primary border border-border-subtle'
+                      : isSelected
+                      ? 'text-text-primary'
+                      : 'text-text-tertiary hover:text-text-secondary'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        </div>
         <button
           onClick={onShare}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setMousePosition({ x: 50, y: 50 })}
-          style={{
-            '--mouse-x': `${mousePosition.x}%`,
-            '--mouse-y': `${mousePosition.y}%`,
-          } as React.CSSProperties}
-          className={`flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-all duration-200 relative text-text-secondary hover:text-text-primary group ${[
-            'hover:bg-surface-secondary',
-            'before:absolute before:inset-0 before:rounded-[12px] before:-z-10',
-            'before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),_var(--surface-primary)_0%,_transparent_50%)]',
-            'before:opacity-0 group-hover:before:opacity-100',
-            'before:transition-all before:duration-200',
-            'hover:shadow-[inset_0_-2px_0_var(--border-light),0_1px_3px_0_var(--border-light)] dark:hover:shadow-[inset_0_-2px_0_var(--border-light),0_2px_4px_rgba(255,255,255,0.05)]',
-            'border border-transparent hover:border-border-light',
-            'transition-all duration-200'
-          ].join(' ')}`}
+          className="flex items-center justify-center w-10 h-10 text-text-tertiary hover:text-text-secondary"
         >
           <TbShare className="w-4 h-4" />
         </button>
@@ -71,12 +91,6 @@ export default function HeaderActions({ onShare }: HeaderActionsProps) {
       <div className="w-[1px] mr-3 h-4 bg-gray-200 dark:bg-gray-700" />
       <div className="relative">
         <button
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setMousePosition({ x: 50, y: 50 })}
-          style={{
-            '--mouse-x': `${mousePosition.x}%`,
-            '--mouse-y': `${mousePosition.y}%`,
-          } as React.CSSProperties}
           className="avatar-trail flex items-center justify-center w-10 h-10 rounded-[12px] text-sm font-medium transition-colors duration-100 relative bg-surface-primary outline outline-1 outline-border-subtle shadow-sm hover:text-text-primary"
         >
           <Image 
