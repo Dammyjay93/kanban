@@ -147,7 +147,7 @@ export default function KanbanCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onClick();
+                  // Handle edit action
                   setShowMenu(false);
                 }}
                 className="w-full px-4 py-2 text-sm text-left text-text-secondary hover:bg-surface-secondary select-none"

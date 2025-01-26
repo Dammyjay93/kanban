@@ -21,10 +21,9 @@ export type Activity = {
   message: string;
   timestamp: string;
   userId: string;
-  userName: string;
   details?: {
-    oldStatus?: Task['status'];
-    newStatus?: Task['status'];
+    oldStatus?: 'todo' | 'inProgress' | 'done';
+    newStatus?: 'todo' | 'inProgress' | 'done';
     comment?: string;
   };
 };

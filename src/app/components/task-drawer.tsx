@@ -39,7 +39,6 @@ interface Activity {
   message: string;
   timestamp: string;
   userId: string;
-  userName: string;
   details?: {
     oldStatus?: Task['status'];
     newStatus?: Task['status'];
@@ -52,6 +51,12 @@ interface ExtendedTask extends Omit<Task, 'subtasks' | 'activities' | 'comments'
   activities: Activity[];
   comments?: Comment[];
 }
+
+const CURRENT_USER = {
+  id: 'DA',
+  fullName: 'Damola Akinleye',
+  initials: 'DA'
+};
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -79,26 +84,18 @@ const getStatusDisplay = (status: string) => {
   }
 };
 
-const StatusTag = ({ status }: { status: Task['status'] }) => (
-  <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
-    {getStatusDisplay(status)}
-  </span>
-);
-
 export default function TaskDrawer({ task, onClose, onUpdate }: { task: ExtendedTask | null; onClose: () => void; onUpdate: (task: ExtendedTask) => void }) {
   const [activeTab, setActiveTab] = useState<TabType>('subtasks');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(task?.title || '');
   const [originalTitle, setOriginalTitle] = useState(title);
   const [description, setDescription] = useState(task?.description || '');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isEditingSubtask, setIsEditingSubtask] = useState<string | null>(null);
   const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newComment, setNewComment] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const tabOptions = [
     { id: 'subtasks', label: 'Subtasks', icon: TbCheckbox, mobileLabel: '' },
@@ -159,26 +156,13 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
     onUpdate(updatedTask);
   };
 
-  const handleChange = (field: keyof ExtendedTask, value: any) => {
+  const handleChange = (field: keyof ExtendedTask, value: string | Task['status'] | Subtask[] | Comment[] | Activity[]) => {
     if (!task) return;
     const updatedTask = {
       ...task,
       [field]: value
     };
     onUpdate(updatedTask);
-  };
-
-  const handleEditSubmit = (subtaskId: string) => {
-    if (!task) return;
-    const updatedSubtasks = task.subtasks?.map(st =>
-      st.id === subtaskId ? { ...st, title: editText } : st
-    );
-    const updatedTask: ExtendedTask = {
-      ...task,
-      subtasks: updatedSubtasks
-    };
-    onUpdate(updatedTask);
-    setEditingId(null);
   };
 
   const handleShare = async () => {
@@ -211,10 +195,10 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
     handleChange('subtasks', updatedSubtasks);
   };
 
-  const handleSubtaskEditSubmit = () => {
+  const handleSubtaskEditSubmit = (subtaskId: string) => {
     if (!task) return;
-    const updatedSubtasks = task.subtasks?.map((st: Subtask) =>
-      st.id === isEditingSubtask ? { ...st, title: editingSubtaskTitle } : st
+    const updatedSubtasks = task.subtasks?.map(st =>
+      st.id === subtaskId ? { ...st, title: editingSubtaskTitle } : st
     );
     const updatedTask: ExtendedTask = {
       ...task,
@@ -250,7 +234,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
     if (!task || !newComment.trim()) return;
     const newCommentObj: Comment = {
       id: Date.now().toString(),
-      userId: 'CT',
+      userId: CURRENT_USER.id,
       text: newComment,
       timestamp: new Date().toISOString()
     };
@@ -287,7 +271,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
                         value={editingSubtaskTitle}
                         onChange={(e) => setEditingSubtaskTitle(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSubtaskEditSubmit();
+                          if (e.key === 'Enter') handleSubtaskEditSubmit(subtask.id);
                           if (e.key === 'Escape') handleSubtaskEditCancel();
                         }}
                         className="flex-1 text-sm text-text-primary bg-transparent border border-border-light rounded-lg px-3 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -301,7 +285,11 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
                           <TbX className="w-3.5 h-3.5 text-text-secondary" />
                         </button>
                         <button
-                          onClick={handleSubtaskEditSubmit}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSubtaskEditSubmit(subtask.id);
+                          }}
+                          type="button" 
                           className="p-1 rounded-md bg-hover-light"
                         >
                           <TbCheck className="w-3.5 h-3.5 text-text-secondary" />
@@ -388,11 +376,13 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
               {task.comments?.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
-                    <span className="text-sm font-medium text-text-primary">CT</span>
+                    <span className="text-sm font-medium text-text-primary">{CURRENT_USER.initials}</span>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-text-primary">Calum Tyler</span>
+                      <span className="text-sm font-medium text-text-primary">
+                        {comment.userId === CURRENT_USER.id ? 'You' : CURRENT_USER.fullName}
+                      </span>
                       <span className="text-xs text-text-tertiary">{comment.timestamp}</span>
                     </div>
                     <p className="text-sm text-text-secondary">{comment.text}</p>
@@ -402,7 +392,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
 
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
-                  <span className="text-sm font-medium text-text-primary">CT</span>
+                  <span className="text-sm font-medium text-text-primary">{CURRENT_USER.initials}</span>
                 </div>
                 <div className="flex-1">
                   <textarea
@@ -435,17 +425,19 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
                 <div key={activity.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center shrink-0">
                     <span className="text-sm font-medium text-text-primary">
-                      {activity.userName.split(' ').map((n: string) => n[0]).join('')}
+                      {CURRENT_USER.initials}
                     </span>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-text-primary">{activity.userName}</span>
+                      <span className="text-sm font-medium text-text-primary">
+                        {activity.userId === CURRENT_USER.id ? 'You' : CURRENT_USER.fullName}
+                      </span>
                       <span className="text-xs text-text-tertiary">{activity.timestamp}</span>
                     </div>
                     <p className="text-sm text-text-secondary">
                       {activity.type === 'status_change' && activity.details && (
-                        <>Changed status from {activity.details.oldStatus} to {activity.details.newStatus}</>
+                        <>Changed status from {getStatusDisplay(activity.details.oldStatus || '')} to {getStatusDisplay(activity.details.newStatus || '')}</>
                       )}
                       {activity.type === 'comment_added' && activity.message}
                     </p>
@@ -482,6 +474,29 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
     if (info.offset.y > 100 || info.velocity.y > 300) {
       onClose();
     }
+  };
+
+  const handleStatusChange = (newStatus: Task['status']) => {
+    const newActivity: Activity = {
+      id: Date.now().toString(),
+      type: 'status_change',
+      message: 'Changed status',
+      timestamp: new Date().toISOString(),
+      userId: CURRENT_USER.id,
+      details: {
+        oldStatus: task?.status,
+        newStatus: newStatus
+      }
+    };
+    
+    if (!task) return;
+    const updatedTask = {
+      ...task,
+      status: newStatus,
+      activities: [...(task.activities || []), newActivity]
+    };
+    
+    onUpdate(updatedTask);
   };
 
   return (
@@ -617,26 +632,7 @@ export default function TaskDrawer({ task, onClose, onUpdate }: { task: Extended
                         value={task.status}
                         onChange={(e) => {
                           const newStatus = e.target.value as Task['status'];
-                          const newActivity: Activity = {
-                            id: Date.now().toString(),
-                            type: 'status_change',
-                            message: 'Changed status',
-                            timestamp: new Date().toISOString(),
-                            userId: 'CT',
-                            userName: 'Calum Tyler',
-                            details: {
-                              oldStatus: task.status,
-                              newStatus: newStatus
-                            }
-                          };
-                          
-                          const updatedTask = {
-                            ...task,
-                            status: newStatus,
-                            activities: [...(task.activities || []), newActivity]
-                          };
-                          
-                          onUpdate(updatedTask);
+                          handleStatusChange(newStatus);
                         }}
                         className={`w-fit appearance-none pl-2.5 pr-6 py-1 rounded-full text-sm font-medium border-0 cursor-pointer focus:ring-0 focus:outline-none ${getStatusColor(task.status)} [&>_option]:text-text-primary [&>_option]:pl-2.5`}
                       >
