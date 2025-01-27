@@ -116,7 +116,7 @@ export default function Home() {
                       <path d="M16.2426 7.75736C18.5858 10.1005 18.5858 13.8995 16.2426 16.2426C13.8995 18.5858 10.1005 18.5858 7.75736 16.2426C5.41421 13.8995 5.41421 10.1005 7.75736 7.75736C10.1005 5.41421 13.8995 5.41421 16.2426 7.75736" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <span className="text-lg font-bold text-text-primary">Kanbanify</span>
+                  <span className="text-lg font-bold text-text-primary">Zenboard</span>
                 </div>
                 <div className="block sm:hidden">
                   <HeaderActions onShare={handleShare} />
